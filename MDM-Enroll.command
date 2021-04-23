@@ -8,8 +8,7 @@
 # ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
 # prompt will be presented.
 #
-# NOTE 1: For local testing, edit and run Set-Env.command to set secrets environment variables
-# NOTE 2: Locally-defined function calls are ';'-appended as a clarity convention
+# NOTE: For local testing, edit and run Set-Env.command to set secrets environment variables
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
@@ -102,7 +101,7 @@ function initializeSecrets ()
 
     if [[ $startBlock -eq 1 ]]; then
         handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
-        \n\nExiting..." 1;
+        \n\nExiting..." 1
     fi
 }
 
@@ -123,14 +122,14 @@ enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
 enrolledInMDMviaDEP="$(profiles status -type enrollment | head -n 1 | grep -ci Yes)"
 
 if [[ $enrolledInMDM -eq 1 ]]; then
-	handleOutput block "Already enrolled in MDM.";
+	handleOutput block "Already enrolled in MDM."
 
 	if [[ $enrolledInMDMviaDEP -eq 1 ]]; then
-		handleOutput block "Enrolled via DEP.";
-        handleOutput exit "Exiting...";
+		handleOutput block "Enrolled via DEP."
+        handleOutput exit "Exiting..."
 	elif [[ $(sw_vers -productVersion | cut -d '.' -f 1) -ge 11 ]]; then
-        handleOutput block "Not enrolled via DEP, but enrollment is supervised (Big Sur).";
-        handleOutput exit "Exiting...";
+        handleOutput block "Not enrolled via DEP, but enrollment is supervised (Big Sur)."
+        handleOutput exit "Exiting..."
     fi
 fi
 
@@ -176,7 +175,7 @@ if [[ "$logWebhookResult" == "success" ]]; then
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
 else
-	handleOutput exit "Could not log credentials access, so credentials were not retrieved." 2;
+	handleOutput exit "Could not log credentials access, so credentials were not retrieved. \n\nExiting..." 2
 fi
 
 read -r -d '' enrollmentWelcomeDialog <<EOF
@@ -205,7 +204,7 @@ cd /tmp
 if [[ "$accountType" == "Admin" ]]; then
 
 	# Admin user workflow
-	handleOutput message "User is an admin";
+	handleOutput message "User is an admin"
 
 	# Trigger enrollment
 	echo "$adminAccountPass" | expect -c '
@@ -228,7 +227,7 @@ if [[ "$accountType" == "Admin" ]]; then
 else
 
 	# Standard user workflow
-	handleOutput message "User is NOT an admin";
+	handleOutput message "User is NOT an admin"
 
 	# Promote, trigger enrollment, then demote
 	echo "$adminAccountPass" | expect -c '
@@ -254,10 +253,10 @@ else
 	'
 	
 	# Double-check that user has been successfully demoted
-	handleOutput blockdouble "Double-checking demotion...";
+	handleOutput blockdouble "Double-checking demotion..."
 
 	if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
-		handleOutput blockdouble "User is still an admin - fixing now!";
+		handleOutput blockdouble "User is still an admin - fixing now!"
 
 		# Demote user
 		echo "$adminAccountPass" | expect -c '
@@ -278,10 +277,10 @@ else
 		'
 
 		# Triple-check that user has been successfully demoted
-		handleOutput blockdouble "Triple-checking demotion...";
+		handleOutput blockdouble "Triple-checking demotion..."
 
 		if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
-            handleOutput exit "User is STILL an admin! \nLogging an error & exiting." 3;
+            handleOutput exit "User is STILL an admin! \nLogging an error & exiting." 3
 		else
             handleOutput blockdouble "User was demoted on second attempt."; fi
 	else
