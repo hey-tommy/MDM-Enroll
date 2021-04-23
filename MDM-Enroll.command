@@ -115,17 +115,19 @@ fi
 scriptDirectory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 # Determine whether machine is already MDM-enrolled
-enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci No$)"
-enrolledInMDMviaDEP="$(profiles status -type enrollment | head -n 1 | grep -ci No$)"
+enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
+enrolledInMDMviaDEP="$(profiles status -type enrollment | head -n 1 | grep -ci Yes)"
 
-if [[ $enrolledInMDM -eq 0 ]]; then
+if [[ $enrolledInMDM -eq 1 ]]; then
 	handleOutput multimessage "Already enrolled in MDM."
 
-	if  [[ $enrolledInMDMviaDEP -eq 0 ]]; then
+	if [[ $enrolledInMDMviaDEP -eq 1 ]]; then
 		handleOutput multimessage "Enrolled via DEP."
-	fi
-
-	handleOutput exit "Exiting ..." 0
+        handleOutput exit "Exiting..."
+	elif [[ $(sw_vers -productVersion | cut -d '.' -f 1) -ge 11 ]]; then
+        handleOutput multimessage "Not enrolled via DEP, but enrollment is supervised (Big Sur)."
+        handleOutput exit "Exiting..."
+    fi
 fi
 
 # Determine current logged-in user account
