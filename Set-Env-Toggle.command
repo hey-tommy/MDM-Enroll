@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Set-Env 1.2
+# Set-Env-Toggle 1.2
 #
 # Adds / removes environment variables needed for local testing of MDM-Enroll
 #

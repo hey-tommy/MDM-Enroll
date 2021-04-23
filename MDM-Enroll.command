@@ -7,7 +7,7 @@
 # ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
 # prompt will be presented.
 #
-# NOTE: For local testing, edit and run Set-Env.command to set secrets environment variables
+# NOTE: For local testing, edit and run Set-Env-Toggle.command to set secrets environment variables
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
@@ -69,7 +69,7 @@ function initializeSecrets ()
 {
     # Parameter format: no input parameters 
     
-    # For local testing, edit and run Set-Env.command to set secrets environment variables
+    # For local testing, edit and run Set-Env-Toggle.command to set secrets environment variables
     # When building for release, replace variable assignments in the following 4 blocks with actual 
     # secrets prior to compiling script with Platypus
 
@@ -99,7 +99,7 @@ function initializeSecrets ()
         handleOutput block "organizationName not set"; fi
 
     if [[ $startBlock -eq 1 ]]; then
-        handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
+        handleOutput exit "For local testing, edit and run Set-Env-Toggle.command to set secrets variables\
         \n\nExiting..." 1
     fi
 }
