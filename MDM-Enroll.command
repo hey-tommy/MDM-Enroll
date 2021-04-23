@@ -34,8 +34,8 @@ function handleOutput ()
 	#                                    exit            Exit app with an optional message and exit code
 
 	# Output leading newline separator
-	if [[ ("$1" != "block" || "$1" != "blockdouble" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
-	[[ ("$1" == "exit" && ! -z "${2:+unset}") ]]; then
+	if [[ ($startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
+	[[ ("$1" == "exit") && (! -z "${2:+unset}") ]]; then
 		echo
 		startBlock=1
 	fi
@@ -102,7 +102,7 @@ function initializeSecrets ()
 
     if [[ $startBlock -eq 1 ]]; then
         handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
-        \nExiting..." 1;
+        \n\nExiting..." 1;
     fi
 }
 
