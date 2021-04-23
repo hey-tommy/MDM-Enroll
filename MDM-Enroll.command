@@ -73,35 +73,29 @@ logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
 # secrets prior to compiling script with Platypus
 
 if [[ -z ${adminCredentialsURL+unset} ]]; then
-	adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
-	if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
-		handleOutput multimessage "adminCredentialsURL not set"
-	fi
-fi
+	adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
+if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
+    handleOutput multimessage "adminCredentialsURL not set"; fi
+
 if [[ -z ${adminCredentialsPassphrase+unset} ]]; then
-	adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
-	if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
-		handleOutput multimessage "adminCredentialsPassphrase not set"
-	fi
-fi
+	adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
+if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
+    handleOutput multimessage "adminCredentialsPassphrase not set"; fi
+
 if [[ -z ${logWebhookURL+unset} ]]; then
-	logWebhookURL="[LOG WEBHOOK URL GOES HERE]"
-	if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
-		handleOutput multimessage "logWebhookURL not set"
-	fi
-fi
+	logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
+if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
+    handleOutput multimessage "logWebhookURL not set"; fi
+
 if [[ -z ${logUpdateWebhookURL+unset} ]]; then
-	logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"
-	if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
-		handleOutput multimessage "logUpdateWebhookURL not set"
-	fi
-fi
+	logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
+if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
+    handleOutput multimessage "logUpdateWebhookURL not set"; fi
+
 if [[ -z ${organizationName+unset} ]]; then
-	organizationName="[ORGANIZATION NAME GOES HERE]"
-	if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
-		handleOutput multimessage "organizationName not set"
-	fi
-fi
+	organizationName="[ORGANIZATION NAME GOES HERE]"; fi
+if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
+    handleOutput multimessage "organizationName not set"; fi
 
 if [[ $startBlock -eq 1 ]]; then
 	handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
