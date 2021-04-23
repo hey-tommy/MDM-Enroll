@@ -52,7 +52,7 @@ function handleOutput ()
 	if [[ "$1" == "endblock" ]]; then
 		unset startBlock; fi
 	
-	# Set exit status and exit app
+	# Set exit code and exit app
 	if [[ "$1" == "exit" ]]; then
 		if [[ ! -z "${3+unset}" ]]; then
 			exit $3
@@ -254,17 +254,15 @@ else
 	'
 	
 	# Double-check that user has been successfully demoted
-	echo
-	echo Double-checking demotion...
+	handleOutput blockdouble "Double-checking demotion...";
 
 	if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
-		echo
-		echo User is still an admin - fixing now!
-		echo
+		handleOutput blockdouble "User is still an admin - fixing now!";
 
 		# Demote user
 		echo "$adminAccountPass" | expect -c '
-		set adminAccountPass [gets stdin]
+		log_user 0
+        set adminAccountPass [gets stdin]
 		set timeout 5
 		spawn su '"$adminAccount"'
 		expect "Password:"
@@ -279,24 +277,14 @@ else
 		expect eof
 		'
 
-		# Tripple-check that user has been successfully demoted
-		echo
-		echo Tripple-checking demotion...
+		# Triple-check that user has been successfully demoted
+		handleOutput blockdouble "Triple-checking demotion...";
 
 		if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
-			echo
-			echo User is STILL an admin - logging an error!
-			echo
-			exit 4
+            handleOutput exit "User is STILL an admin! \nLogging an error & exiting." 3;
 		else
-			echo
-			echo User was demoted on second attempt.
-			echo
-		fi
+            handleOutput blockdouble "User was demoted on second attempt."; fi
 	else
-		echo
-		echo User was demoted on first attempt.
-		echo		
-	fi 
+		handleOutput blockdouble "User was demoted on first attempt."; fi
 
 fi
