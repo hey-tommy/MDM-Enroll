@@ -26,13 +26,15 @@ export HISTFILE=/dev/null
 function handleOutput ()
 {
 	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code])
-	#      where [action] can be either: message
-	#                                    multimessage
-	#                                    endblock
-	#                                    exit
+    #
+	#      where [action] can be either: message         One-line message
+	#                                    block           Multi-line message block, no blank lines in between
+	#                                    blockdouble     Multi-line message block, with blank lines in between
+	#                                    endblock        Marks end of multi-line message block
+	#                                    exit            Exit app with an optional message and exit code
 
 	# Output leading newline separator
-	if [[ ("$1" != "multimessage" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
+	if [[ ("$1" != "block" || "$1" != "blockdouble" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
 	[[ ("$1" == "exit" && ! -z "${2:+unset}") ]]; then
 		echo
 		startBlock=1
@@ -43,7 +45,7 @@ function handleOutput ()
 		echo -e "$2"; fi
 	
 	# Output trailing newline separator
-	if [[ "$1" != "multimessage" ]]; then
+	if [[ "$1" != "block" ]]; then
 		echo; fi
 
 	# Clear startBlock var for subsequent function runs
@@ -76,27 +78,27 @@ function initializeSecrets ()
     if [[ -z ${adminCredentialsURL+unset} ]]; then
         adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
     if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
-        handleOutput multimessage "adminCredentialsURL not set"; fi
+        handleOutput block "adminCredentialsURL not set"; fi
 
     if [[ -z ${adminCredentialsPassphrase+unset} ]]; then
         adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
     if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
-        handleOutput multimessage "adminCredentialsPassphrase not set"; fi
+        handleOutput block "adminCredentialsPassphrase not set"; fi
 
     if [[ -z ${logWebhookURL+unset} ]]; then
         logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
     if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
-        handleOutput multimessage "logWebhookURL not set"; fi
+        handleOutput block "logWebhookURL not set"; fi
 
     if [[ -z ${logUpdateWebhookURL+unset} ]]; then
         logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
     if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
-        handleOutput multimessage "logUpdateWebhookURL not set"; fi
+        handleOutput block "logUpdateWebhookURL not set"; fi
 
     if [[ -z ${organizationName+unset} ]]; then
         organizationName="[ORGANIZATION NAME GOES HERE]"; fi
     if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
-        handleOutput multimessage "organizationName not set"; fi
+        handleOutput block "organizationName not set"; fi
 
     if [[ $startBlock -eq 1 ]]; then
         handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
@@ -121,13 +123,13 @@ enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
 enrolledInMDMviaDEP="$(profiles status -type enrollment | head -n 1 | grep -ci Yes)"
 
 if [[ $enrolledInMDM -eq 1 ]]; then
-	handleOutput multimessage "Already enrolled in MDM.";
+	handleOutput block "Already enrolled in MDM.";
 
 	if [[ $enrolledInMDMviaDEP -eq 1 ]]; then
-		handleOutput multimessage "Enrolled via DEP.";
+		handleOutput block "Enrolled via DEP.";
         handleOutput exit "Exiting...";
 	elif [[ $(sw_vers -productVersion | cut -d '.' -f 1) -ge 11 ]]; then
-        handleOutput multimessage "Not enrolled via DEP, but enrollment is supervised (Big Sur).";
+        handleOutput block "Not enrolled via DEP, but enrollment is supervised (Big Sur).";
         handleOutput exit "Exiting...";
     fi
 fi
