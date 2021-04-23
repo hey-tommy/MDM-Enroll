@@ -99,8 +99,8 @@ function initializeSecrets ()
         handleOutput block "organizationName not set"; fi
 
     if [[ $startBlock -eq 1 ]]; then
-        handleOutput exit "For local testing, edit and run Set-Env-Toggle.command to set secrets variables\
-        \n\nExiting..." 1
+        handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
+        \nExiting..." 1
     fi
 }
 
