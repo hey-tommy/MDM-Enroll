@@ -9,8 +9,7 @@
 # prompt will be presented.
 #
 # NOTE 1: For local testing, edit and run Set-Env.command to set secrets environment variables
-#
-# NOTE 2: Locally-defined function calls are ';'-appended merely as a clarity convention
+# NOTE 2: Locally-defined function calls are ';'-appended as a clarity convention
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
@@ -257,7 +256,6 @@ else
 	echo Double-checking demotion...
 
 	if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
-
 		echo
 		echo User is still an admin - fixing now!
 		echo
