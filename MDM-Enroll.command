@@ -1,9 +1,8 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.4
+# MDM-Enroll v1.5
 #
-# This script will trigger an Apple Device Enrollment prompt and allow a user to
-# easily enroll into the MDM.
+# Triggers an Apple Device Enrollment prompt and allow a user to easily enroll into the MDM.
 #
 # ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
 # prompt will be presented.
@@ -24,7 +23,7 @@ export HISTFILE=/dev/null
 
 function handleOutput ()
 {
-	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code])
+	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code]{int})
     #
 	#      where [action] can be either: message         One-line message
 	#                                    block           Multi-line message block, no blank lines in between
