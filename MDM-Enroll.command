@@ -31,28 +31,25 @@ function handleOutput ()
 	#														exit
 
 	# Output leading newline separator
-	if [[ ("$1" != "multimessage" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] \
-	|| [[ ("$1" == "exit" && ! -z "${2:+unset}") ]]; then
+	if [[ ("$1" != "multimessage" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
+	[[ ("$1" == "exit" && ! -z "${2:+unset}") ]]; then
 		echo
 		startBlock=1
 	fi
 	
 	# Output main message output
 	if [[ ! -z "${2:+unset}" ]]; then
-		echo -e "$2"
-	fi
+		echo -e "$2"; fi
 	
 	# Output trailing newline separator
 	if [[ "$1" != "multimessage" ]]; then
-		echo
-	fi
+		echo; fi
 
 	# Clear startBlock var for subsequent function runs
 	if [[ "$1" == "endblock" ]]; then
-		unset startBlock
-	fi
+		unset startBlock; fi
 	
-	# Exit app and set result code
+	# Set exit status and exit app
 	if [[ "$1" == "exit" ]]; then
 		if [[ ! -z "${3+unset}" ]]; then
 			exit $3
@@ -107,7 +104,7 @@ if [[ -z ${organizationName+unset} ]]; then
 fi
 
 if [[ $startBlock -eq 1 ]]; then
-	handleOutput exit "For local testing, edit and run Set-Env.command to set secrets vars\
+	handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
     \nExiting..." 1
 fi
 
@@ -167,12 +164,10 @@ logWebhookFullQueryURL="$(eval "echo \"$(echo "$logWebhookURL"\?"$logWebhookQuer
 logWebhookResult=$(curl -s "$logWebhookFullQueryURL" | sed -En 's/.*"status": "([^"]+)"}$/\1/p')
 
 if [[ "$logWebhookResult" == "success" ]]; then
-
-	# Retrieve admin account credentials
+	# Retrieve and decrypt admin account credentials
 	adminCredentials=$(curl -s "$adminCredentialsURL" | openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
-
 else
 	handleOutput exit "Could not log credentials access, so credentials were not retrieved." 2
 fi
