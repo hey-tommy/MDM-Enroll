@@ -8,7 +8,7 @@
 # NOTE: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
 # prompt will be presented.
 #
-# For local testing, edit and run MDM-Enroll-Set-Vars.command to set secrets environment variables
+# For local testing, edit and run Set-Env.command to set secrets environment variables
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
@@ -71,7 +71,7 @@ logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
 
 # Initialize secrets
 #
-# For local testing, edit and run MDM-Enroll-Set-Vars.command to set secrets environment variables
+# For local testing, edit and run Set-Env.command to set secrets environment variables
 # When building for release, replace variable assignments in the following 4 if blocks with actual 
 # secrets prior to compiling script with Platypus
 
@@ -107,7 +107,7 @@ if [[ -z ${organizationName+unset} ]]; then
 fi
 
 if [[ $startBlock -eq 1 ]]; then
-	handleOutput exit "For local testing, edit and run MDM-Enroll-Set-Vars.command to set secrets vars\
+	handleOutput exit "For local testing, edit and run Set-Env.command to set secrets vars\
     \nExiting..." 1
 fi
 
@@ -180,7 +180,7 @@ fi
 read -r -d '' enrollmentWelcomeDialog <<EOF
 display dialog "This tool will enroll you into our MDM platform.\n\nEnrolling into the MDM will help keep your Mac \
 protected and up-to-date." with title "$organizationName MDM Enrollment Tool" buttons {"Continue"} default button \
-"Continue" with hidden answer with icon alias POSIX file "$scriptDirectory/Organization-Logo.icns"
+"Continue" with hidden answer with icon alias POSIX file "$scriptDirectory/Pic-Logo.icns"
 EOF
 
 # Display dialog box
@@ -190,7 +190,7 @@ read -r -d '' enrollmentContinueDialog <<EOF
 display dialog "Click on the DEVICE ENROLLMENT notification, which will appear in the top right of your screen several \
 seconds after you click Continue below.\n\n\nPlease click Continue to begin." with title "$organizationName Laptop Managment \
 Enrollment" buttons {"Continue"} default button "Continue" with hidden answer with icon alias POSIX file \
-"$scriptDirectory/System-Preferences.icns"
+"$scriptDirectory/Pic-SysPrefs.icns"
 EOF
 
 # Display dialog box
