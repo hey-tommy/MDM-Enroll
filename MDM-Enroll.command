@@ -60,47 +60,57 @@ function handleOutput ()
 }
 
 
-# Initialize strings & vars
+# initializeSecrets () Function
+#
+# Ensures that secrets are initialized and exits if they aren't properly set
+
+function initializeSecrets ()
+{
+    # Parameter format: no input parameters 
+    
+    # For local testing, edit and run Set-Env.command to set secrets environment variables
+    # When building for release, replace variable assignments in the following 4 blocks with actual 
+    # secrets prior to compiling script with Platypus
+
+    if [[ -z ${adminCredentialsURL+unset} ]]; then
+        adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
+    if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
+        handleOutput multimessage "adminCredentialsURL not set"; fi
+
+    if [[ -z ${adminCredentialsPassphrase+unset} ]]; then
+        adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
+    if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
+        handleOutput multimessage "adminCredentialsPassphrase not set"; fi
+
+    if [[ -z ${logWebhookURL+unset} ]]; then
+        logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
+    if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
+        handleOutput multimessage "logWebhookURL not set"; fi
+
+    if [[ -z ${logUpdateWebhookURL+unset} ]]; then
+        logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
+    if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
+        handleOutput multimessage "logUpdateWebhookURL not set"; fi
+
+    if [[ -z ${organizationName+unset} ]]; then
+        organizationName="[ORGANIZATION NAME GOES HERE]"; fi
+    if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
+        handleOutput multimessage "organizationName not set"; fi
+
+    if [[ $startBlock -eq 1 ]]; then
+        handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
+        \nExiting..." 1;
+    fi
+}
+
+
+initializeSecrets
+
+# Initialize variables
 logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUserAccount=\"\$currentUserAccount\
 \"&accountType=\"\$accountType\"&computerName=\"\$computerName\"&serialNumber=\"\$serialNumber\
 \"&macOSVersion=\"\$macOSVersion\"&externalIP=\"\$externalIP\"&dateStamp=\"\$dateStamp\""
 logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
-
-# Initialize secrets
-#
-# For local testing, edit and run Set-Env.command to set secrets environment variables
-# When building for release, replace variable assignments in the following 4 if blocks with actual 
-# secrets prior to compiling script with Platypus
-
-if [[ -z ${adminCredentialsURL+unset} ]]; then
-	adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
-if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
-    handleOutput multimessage "adminCredentialsURL not set"; fi
-
-if [[ -z ${adminCredentialsPassphrase+unset} ]]; then
-	adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
-if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
-    handleOutput multimessage "adminCredentialsPassphrase not set"; fi
-
-if [[ -z ${logWebhookURL+unset} ]]; then
-	logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
-if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
-    handleOutput multimessage "logWebhookURL not set"; fi
-
-if [[ -z ${logUpdateWebhookURL+unset} ]]; then
-	logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
-if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
-    handleOutput multimessage "logUpdateWebhookURL not set"; fi
-
-if [[ -z ${organizationName+unset} ]]; then
-	organizationName="[ORGANIZATION NAME GOES HERE]"; fi
-if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
-    handleOutput multimessage "organizationName not set"; fi
-
-if [[ $startBlock -eq 1 ]]; then
-	handleOutput exit "For local testing, edit and run Set-Env.command to set secrets variables\
-    \nExiting..." 1
-fi
 
 # Required for proper running regardless of whether running compiled or as script
 scriptDirectory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
