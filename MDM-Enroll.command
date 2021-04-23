@@ -5,10 +5,12 @@
 # This script will trigger an Apple Device Enrollment prompt and allow a user to
 # easily enroll into the MDM.
 #
-# NOTE: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
+# ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
 # prompt will be presented.
 #
-# For local testing, edit and run Set-Env.command to set secrets environment variables
+# NOTE 1: For local testing, edit and run Set-Env.command to set secrets environment variables
+#
+# NOTE 2: Locally-defined function calls are ';'-appended merely as a clarity convention
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
@@ -20,15 +22,15 @@ export HISTFILE=/dev/null
 
 # handleOutput () Function
 #
-# Handles user interaction & logging
+# Handles user interaction, logging and exiting
 
 function handleOutput ()
 {
-	# Format: handleOutput [action] (optional:[message_string]) (optional:[exit_code])
-	#						where [action] can be one of: 	message
-	#														multimessage
-	#														endblock
-	#														exit
+	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code])
+	#      where [action] can be either: message
+	#                                    multimessage
+	#                                    endblock
+	#                                    exit
 
 	# Output leading newline separator
 	if [[ ("$1" != "multimessage" || $startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
@@ -104,7 +106,7 @@ function initializeSecrets ()
 }
 
 
-initializeSecrets
+initializeSecrets;
 
 # Initialize variables
 logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUserAccount=\"\$currentUserAccount\
@@ -120,14 +122,14 @@ enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
 enrolledInMDMviaDEP="$(profiles status -type enrollment | head -n 1 | grep -ci Yes)"
 
 if [[ $enrolledInMDM -eq 1 ]]; then
-	handleOutput multimessage "Already enrolled in MDM."
+	handleOutput multimessage "Already enrolled in MDM.";
 
 	if [[ $enrolledInMDMviaDEP -eq 1 ]]; then
-		handleOutput multimessage "Enrolled via DEP."
-        handleOutput exit "Exiting..."
+		handleOutput multimessage "Enrolled via DEP.";
+        handleOutput exit "Exiting...";
 	elif [[ $(sw_vers -productVersion | cut -d '.' -f 1) -ge 11 ]]; then
-        handleOutput multimessage "Not enrolled via DEP, but enrollment is supervised (Big Sur)."
-        handleOutput exit "Exiting..."
+        handleOutput multimessage "Not enrolled via DEP, but enrollment is supervised (Big Sur).";
+        handleOutput exit "Exiting...";
     fi
 fi
 
@@ -173,7 +175,7 @@ if [[ "$logWebhookResult" == "success" ]]; then
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
 else
-	handleOutput exit "Could not log credentials access, so credentials were not retrieved." 2
+	handleOutput exit "Could not log credentials access, so credentials were not retrieved." 2;
 fi
 
 read -r -d '' enrollmentWelcomeDialog <<EOF
@@ -202,7 +204,7 @@ cd /tmp
 if [[ "$accountType" == "Admin" ]]; then
 
 	# Admin user workflow
-	handleOutput message "User is an admin"
+	handleOutput message "User is an admin";
 
 	# Trigger enrollment
 	echo "$adminAccountPass" | expect -c '
@@ -225,7 +227,7 @@ if [[ "$accountType" == "Admin" ]]; then
 else
 
 	# Standard user workflow
-	handleOutput message "User is NOT an admin"
+	handleOutput message "User is NOT an admin";
 
 	# Promote, trigger enrollment, then demote
 	echo "$adminAccountPass" | expect -c '
