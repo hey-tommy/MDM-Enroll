@@ -2,12 +2,17 @@
 #
 # MDM-Enroll v1.5
 #
-# Triggers an Apple Device Enrollment prompt and allow a user to easily enroll into the MDM.
+# Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
+# into the MDM.
 #
-# ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, no enrollment
-# prompt will be presented.
+# ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, 
+# no enrollment prompt will be presented.
 #
-# NOTE: For local testing, edit and run Set-Env-Toggle.command to set secrets environment variables
+# NOTE: For local testing, edit and run Set-Env-Toggle.command to set secrets 
+# environment variables
+#
+# WARNING: Be absolutely sure to NOT commit or push this file if you embed your 
+# secrets inside it (which you should only be doing right prior to deployment)
 
 
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.

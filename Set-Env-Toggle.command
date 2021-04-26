@@ -4,8 +4,15 @@
 #
 # Adds / removes environment variables needed for local testing of MDM-Enroll
 #
-### WARNING: Once you've edited this scipt with your secrets, be sure sure to 
-###########  add it to your .git-ignore file!!!
+### WARNING: To avoid accidentally committing or pushing your secrets, run the 
+###########  following command once you've got this in your local repo!!!
+###########
+###########  >>>   git update-index --skip-worktree Set-Env-Toggle.command 
+###########
+###########  This will ensure that once you edit this scipt with your secrets, 
+###########  those changes will NOT be tracked, comitted or pushed. Also, be  
+###########  absolutely sure you do NOT commit your MDM-Enroll.command once 
+###########  you've embedded your secrets directly inside it!
 #
 # NOTE 1: You must first edit the placeholder values (2nd parameter of toggleEnvVar)
 # and replace them with your actual secrets before running this script.
