@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.5
+# MDM-Enroll v1.6
 #
 # Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
 # into the MDM.
@@ -8,7 +8,12 @@
 # ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, 
 # no enrollment prompt will be presented.
 #
-# NOTE: For local testing, edit and run Set-Env-Toggle.command to set secrets 
+# NOTE 1: While this script can run stand-alone, when used for the designed 
+# workflow, it is intended to be obfuscated by wrapping it into an encoded/
+# compiled .app bundle that presents as single user-run app. This is done using
+# a modified fork of bashapp, available at https://github.com/hey-tommy/bashapp
+#
+# NOTE 2: For local testing, edit and run Set-Env-Toggle.command to set secrets 
 # environment variables
 #
 # WARNING: Be absolutely sure to NOT commit or push this file if you embed your 
@@ -186,8 +191,8 @@ logWebhookFullQueryURL="$(eval "echo \"$(echo "$logWebhookURL"\?"$logWebhookQuer
 # Log admin credentials access
 logWebhookResult=$(curl -s "$logWebhookFullQueryURL" | sed -En 's/.*"status": "([^"]+)"}$/\1/p')
 
+# Retrieve and decrypt admin account credentials
 if [[ "$logWebhookResult" == "success" ]]; then
-	# Retrieve and decrypt admin account credentials
 	adminCredentials=$(curl -s "$adminCredentialsURL" | openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
