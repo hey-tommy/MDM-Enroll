@@ -118,8 +118,10 @@ logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUser
 \"&accountType=\"\$accountType\"&computerName=\"\$computerName\"&serialNumber=\"\$serialNumber\
 \"&macOSVersion=\"\$macOSVersion\"&externalIP=\"\$externalIP\"&dateStamp=\"\$dateStamp\""
 logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
+iconLogo="Pic-Logo.icns"
+iconSysPrefs="Pic-SysPrefs.icns"
 
-# Ensure that script's parent directory is known regardless of how it was invoked
+# Determine script/executable's parent directory regardless of how it was invoked
 if [[ -z ${scriptDirectory+unset} ]]; then
 	if [[ -n "${1:+unset}" ]]; then
 		scriptDirectory="$1"
@@ -127,6 +129,10 @@ if [[ -z ${scriptDirectory+unset} ]]; then
 		scriptDirectory="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 	fi
 fi
+
+# Determine if running as GUI-only (i.e invoked as .app bundle)
+if [[ "$(pwd)" == "/" ]]; then
+	guiOnly=1; fi
 
 # Determine whether machine is already MDM-enrolled
 enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
@@ -189,10 +195,25 @@ else
 	handleOutput exit "Could not log credentials access, so credentials were not retrieved. \n\nExiting..." 2
 fi
 
+# Check dialog icon resources & prepare icon paths for AppleScript dialogs
+for icon in "Logo" "SysPrefs"; do
+	if [[ -f "$scriptDirectory"/"$(eval echo "\$icon${icon}")" ]]; then
+		declare icon${icon}Path="$scriptDirectory"/"$(eval echo "\$icon${icon}")"
+		declare icon${icon}Dialog="alias POSIX file \"$(eval echo "\$icon${icon}Path")\""
+	elif [[ -f "$(dirname "$scriptDirectory")"/Resources/"$(eval echo "\$icon${icon}")" ]]; then
+		declare icon${icon}Path="$(dirname "$scriptDirectory")"/Resources/"$(eval echo "\$icon${icon}")"
+		declare icon${icon}Dialog="alias POSIX file \"$(eval echo "\$icon${icon}Path")\""
+	elif [[ "$icon" == "Logo" ]]; then
+		declare icon${icon}Dialog="note"
+	else
+		declare icon${icon}Dialog="caution"		
+	fi
+done
+
 read -r -d '' enrollmentWelcomeDialog <<EOF
 display dialog "This tool will enroll you into our MDM platform.\n\nEnrolling into the MDM will help keep your Mac \
 protected and up-to-date." with title "$organizationName MDM Enrollment Tool" buttons {"Continue"} default button \
-"Continue" with hidden answer with icon alias POSIX file "$scriptDirectory/Pic-Logo.icns"
+"Continue" with hidden answer with icon $iconLogoDialog
 EOF
 
 # Display dialog box
@@ -201,8 +222,7 @@ EOF
 read -r -d '' enrollmentContinueDialog <<EOF
 display dialog "Click on the DEVICE ENROLLMENT notification, which will appear in the top right of your screen several \
 seconds after you click Continue below.\n\n\nPlease click Continue to begin." with title "$organizationName Laptop Managment \
-Enrollment" buttons {"Continue"} default button "Continue" with hidden answer with icon alias POSIX file \
-"$scriptDirectory/Pic-SysPrefs.icns"
+Enrollment" buttons {"Continue"} default button "Continue" with hidden answer with icon $iconSysPrefsDialog
 EOF
 
 # Display dialog box
