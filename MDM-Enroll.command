@@ -13,18 +13,18 @@
 # Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
 # (a mostly useless attempt at an additional obfuscation layer)
 
-HISTFILE=/dev/null
-export HISTFILE=/dev/null
+HISTFILE="/dev/null"
+export HISTFILE="/dev/null"
 
 
-# handleOutput () Function
+# handleOutput Function
 #
 # Handles user interaction, logging and exiting
 
 function handleOutput ()
 {
 	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code]{int})
-    #
+	#
 	#      where [action] can be either: message         One-line message
 	#                                    block           Multi-line message block, no blank lines in between
 	#                                    blockdouble     Multi-line message block, with blank lines in between
@@ -33,13 +33,13 @@ function handleOutput ()
 
 	# Output leading newline separator
 	if [[ ($startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
-	[[ ("$1" == "exit") && (! -z "${2:+unset}") ]]; then
+	[[ ("$1" == "exit") && (-n "${2:+unset}") ]]; then
 		echo
 		startBlock=1
 	fi
 	
 	# Output main message output
-	if [[ ! -z "${2:+unset}" ]]; then
+	if [[ -n "${2:+unset}" ]]; then
 		echo -e "$2"; fi
 	
 	# Output trailing newline separator
@@ -52,8 +52,8 @@ function handleOutput ()
 	
 	# Set exit code and exit app
 	if [[ "$1" == "exit" ]]; then
-		if [[ ! -z "${3+unset}" ]]; then
-			exit $3
+		if [[ -n "${3+unset}" ]]; then
+			exit "$3"
 		else
 			exit 0
 		fi
@@ -61,7 +61,7 @@ function handleOutput ()
 }
 
 
-# initializeSecrets () Function
+# initializeSecrets Function
 #
 # Ensures that secrets are initialized and exits if they aren't properly set
 
@@ -70,8 +70,9 @@ function initializeSecrets ()
     # Parameter format: no input parameters 
     
     # For local testing, edit and run Set-Env-Toggle.command to set secrets environment variables
-    # When building for release, replace variable assignments in the following 4 blocks with actual 
-    # secrets prior to compiling script with Platypus
+    # When doing final testing or building for release, either run your edited
+    # Set-Sec-Toggle.command to embed your secrets into this script, or manually 
+    # replace variable assignments with your secrets below
 
     if [[ -z ${adminCredentialsURL+unset} ]]; then
         adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
@@ -113,8 +114,14 @@ logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUser
 \"&macOSVersion=\"\$macOSVersion\"&externalIP=\"\$externalIP\"&dateStamp=\"\$dateStamp\""
 logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
 
-# Required for proper running regardless of whether running compiled or as script
-scriptDirectory="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+# Ensure that script's parent directory is known regardless of how it was invoked
+if [[ -z ${scriptDirectory+unset} ]]; then
+	if [[ -n "${1:+unset}" ]]; then
+		scriptDirectory="$1"
+	else
+		scriptDirectory="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+	fi
+fi
 
 # Determine whether machine is already MDM-enrolled
 enrolledInMDM="$(profiles status -type enrollment | tail -n 1 | grep -ci Yes)"
@@ -134,10 +141,10 @@ fi
 
 # Determine current logged-in user account
 currentUserAccount="$(stat -f%Su /dev/console)"
-currentUserAccountUID=$(dscl . -read "/Users/$currentUserAccount" UniqueID | awk '{print $2}')
+currentUserAccountUID=$(dscl . -read /Users/"$currentUserAccount" UniqueID | awk '{print $2}')
 
 # Get Full Name of user and URL-encode
-currentUserFullName="$(dscl . -read /Users/$currentUserAccount RealName | cut -d: -f2 | sed -e 's/^[ \t]*//' \
+currentUserFullName="$(dscl . -read /Users/"$currentUserAccount" RealName | cut -d: -f2 | sed -e 's/^[ \t]*//' \
 | grep -v "^$" | sed -e 's/ /%20/g')"
 
 # Check if user is admin or standard
