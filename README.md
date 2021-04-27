@@ -1,2 +1,2 @@
 # MDM-Enroll
-Trigger a DEP notification for admin AND standard accounts, and direct users to self-enroll
+Triggers a macOS MDM device enrollment notification for admin AND standard accounts, and directs users to self-enroll
