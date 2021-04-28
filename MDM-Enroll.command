@@ -40,16 +40,19 @@ function handleOutput ()
 	#                                    blockdouble     Multi-line message block, with blank lines in between
 	#                                    endblock        Marks end of multi-line message block
 	#                                    exit            Exit app with an optional message and exit code
+	#
+	#      Reminder: function parameters are positional. If skipping an optional parameter, but not skipping 
+	#      the one that follows it, replace the skipped parameter with an empty string (i.e. "")
 
 	# Output leading newline separator
 	if [[ ($startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
-	[[ ("$1" == "exit") && (-n "${2:+unset}") ]]; then
+	[[ ("$1" == "exit") && (-n "${2:+empty}") ]]; then
 		echo
 		startBlock=1
 	fi
 	
 	# Output main message output
-	if [[ -n "${2:+unset}" ]]; then
+	if [[ -n "${2:+empty}" ]]; then
 		echo -e "$2"; fi
 	
 	# Output trailing newline separator
@@ -62,7 +65,7 @@ function handleOutput ()
 	
 	# Set exit code and exit app
 	if [[ "$1" == "exit" ]]; then
-		if [[ -n "${3+unset}" ]]; then
+		if [[ -n "${3+empty}" ]]; then
 			exit "$3"
 		else
 			exit 0
@@ -84,27 +87,27 @@ function initializeSecrets ()
     # Set-Sec-Toggle.command to embed your secrets into this script, or manually 
     # replace variable assignments with your secrets below
 
-    if [[ -z ${adminCredentialsURL+unset} ]]; then
+    if [[ -z ${adminCredentialsURL+empty} ]]; then
         adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
     if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
         handleOutput block "adminCredentialsURL not set"; fi
 
-    if [[ -z ${adminCredentialsPassphrase+unset} ]]; then
+    if [[ -z ${adminCredentialsPassphrase+empty} ]]; then
         adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
     if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
         handleOutput block "adminCredentialsPassphrase not set"; fi
 
-    if [[ -z ${logWebhookURL+unset} ]]; then
+    if [[ -z ${logWebhookURL+empty} ]]; then
         logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
     if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
         handleOutput block "logWebhookURL not set"; fi
 
-    if [[ -z ${logUpdateWebhookURL+unset} ]]; then
+    if [[ -z ${logUpdateWebhookURL+empty} ]]; then
         logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
     if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
         handleOutput block "logUpdateWebhookURL not set"; fi
 
-    if [[ -z ${organizationName+unset} ]]; then
+    if [[ -z ${organizationName+empty} ]]; then
         organizationName="[ORGANIZATION NAME GOES HERE]"; fi
     if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
         handleOutput block "organizationName not set"; fi
@@ -127,8 +130,8 @@ iconLogo="Pic-Logo.icns"
 iconSysPrefs="Pic-SysPrefs.icns"
 
 # Determine script/executable's parent directory regardless of how it was invoked
-if [[ -z ${scriptDirectory+unset} ]]; then
-	if [[ -n "${1:+unset}" ]]; then
+if [[ -z ${scriptDirectory+empty} ]]; then
+	if [[ -n "${1:+empty}" ]]; then
 		scriptDirectory="$1"
 	else
 		scriptDirectory="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
