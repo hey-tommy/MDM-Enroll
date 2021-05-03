@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.8
+# MDM-Enroll v1.9
 #
 # Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
 # into the MDM.
@@ -111,7 +111,7 @@ function handleOutput ()
 
 	# Output leading newline separator
 	if [[ ($startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
-	[[ ("$1" == "exit") && (-n "${2:+empty}") ]]; then
+	   [[ ("$1" == "exit") && (-n "${2:+empty}") ]]; then
 		echo
 		startBlock=1
 	fi
@@ -191,16 +191,30 @@ function initializeSecrets ()
 	for index in "${!secretsVarNames[@]}"; do
 		if [[ "${secretsActualValues[index]}" != "${secretsPlaceholders[index]}" ]]; then
 			export -n "${secretsVarNames[index]}"="${secretsActualValues[index]}"
-		elif [[ -z ${!secretsVarNames[index]+empty} || "${!secretsVarNames[index]}" == "${secretsPlaceholders[index]}" ]]; then        
+		elif [[ -z ${!secretsVarNames[index]+empty} || \
+		        "${!secretsVarNames[index]}" == "${secretsPlaceholders[index]}" ]]; then        
 			handleOutput block "${secretsVarNames[index]}"' not set';
 		fi
 	done
 	
 	#shellcheck disable=2154
 	if [[ $startBlock -eq 1 ]]; then
-		handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
-		\nExiting..." 1
+		handleOutput exit "For local testing, edit & run Set-Env-Toggle.command `
+		`to set secrets env vars \nExiting..." 1
 	fi
+}
+
+
+# buildQueryString Function
+#
+# Concatanates query string parameters
+
+function buildQueryString ()
+{
+	if [[ -n "${!1}" ]]; then
+		export -n "${1}"+='&'; fi
+	
+	export -n "${1}"+="$2"'='"${!2}"
 }
 
 
@@ -219,13 +233,11 @@ initializeSecrets;
 #	"organizationName";
 
 # Initialize variables
-logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUserAccount=\"\$currentUserAccount\
-\"&accountType=\"\$accountType\"&computerName=\"\$computerName\"&serialNumber=\"\$serialNumber\
-\"&macOSVersion=\"\$macOSVersion\"&externalIP=\"\$externalIP\"&dateStamp=\"\$dateStamp\""
-logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
-
+# shellcheck disable=2034
 iconLogo="Pic-Logo.icns"
+# shellcheck disable=2034
 iconSysPrefs="Pic-SysPrefs.icns"
+# shellcheck disable=2154
 dialogTitle="$organizationName MDM Enrollment Tool"
 
 # Determine script/executable's parent directory regardless of how it was invoked
@@ -261,11 +273,14 @@ fi
 
 # Determine current logged-in user account
 currentUserAccount="$(stat -f%Su /dev/console)"
-currentUserAccountUID=$(dscl . -read /Users/"$currentUserAccount" UniqueID | awk '{print $2}')
+currentUserAccountUID="$(id -u "$currentUserAccount")"
 
 # Get Full Name of user and URL-encode
-currentUserFullName="$(dscl . -read /Users/"$currentUserAccount" RealName | cut -d: -f2 | sed -e 's/^[ \t]*//' \
-| grep -v "^$" | sed -e 's/ /%20/g')"
+# shellcheck disable=2034
+currentUserFullName="$(dscl . -read /Users/"$currentUserAccount" RealName \
+| cut -d: -f2 | sed -e 's/^[ \t]*//' | grep -v "^$" | sed -e 's/ /%20/g')"
+buildQueryString logWebhookQueryString currentUserFullName
+buildQueryString logWebhookQueryString currentUserAccount
 
 # Check if user is admin or standard
 if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
@@ -273,36 +288,53 @@ if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; th
 else
 	accountType="Standard"
 fi
+buildQueryString logWebhookQueryString accountType
 
 # Get computer name and URL-encode
+# shellcheck disable=2034
 computerName="$(scutil --get ComputerName | sed -e 's/ /%20/g')"
+buildQueryString logWebhookQueryString computerName
 
 # Get serial number
-serialNumber="$(ioreg -c IOPlatformExpertDevice -d 2 | awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')"
+# shellcheck disable=2034
+serialNumber="$(ioreg -c IOPlatformExpertDevice -d 2 \
+| awk -F\" '/IOPlatformSerialNumber/{print $(NF-1)}')"
+buildQueryString logWebhookQueryString serialNumber
 
 # Get OS version
+# shellcheck disable=2034
 macOSVersion="$(sw_vers -productVersion)"
+buildQueryString logWebhookQueryString macOSVersion
 
 # Get external IP address
+# shellcheck disable=2034
 externalIP="$(dig @resolver4.opendns.com myip.opendns.com +short | tail -n 1)"
+buildQueryString logWebhookQueryString externalIP
 
 # Get timestamp
+# shellcheck disable=2034
 dateStamp="$(date +"%F %T" | sed -e 's/ /%20/g' | sed -e 's/:/%3A/g')"
+buildQueryString logWebhookQueryString dateStamp
+buildQueryString logUpdateWebookQueryString dateStamp
 
 # Build full webhook query URL
-logWebhookFullQueryURL="$(eval "echo \"$(echo "$logWebhookURL"\?"$logWebhookQueryString")\"")"
+# shellcheck disable=2154
+logWebhookFullQueryURL="$logWebhookURL"\?"$logWebhookQueryString"
 
 # Log admin credentials access
-logWebhookResult=$(curl -s "$logWebhookFullQueryURL" | sed -En 's/.*"status": "([^"]+)"}$/\1/p')
+logWebhookResult=$(curl -s "$logWebhookFullQueryURL" \
+| sed -En 's/.*"status": "([^"]+)"}$/\1/p')
 
 # Retrieve and decrypt admin account credentials
 # shellcheck disable=2154
 if [[ "$logWebhookResult" == "success" ]]; then
-	adminCredentials=$(curl -s "$adminCredentialsURL" | openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
+	adminCredentials=$(curl -s "$adminCredentialsURL" \
+	| openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
 else
-	handleOutput exit "Could not log credentials access, so credentials were not retrieved. \n\nExiting..." 2
+	handleOutput exit "Could not log credentials access, so credentials were `
+	`not retrieved. \n\nExiting..." 2
 fi
 
 introDialogButtonPressed=""
@@ -386,7 +418,8 @@ else
 	# Double-check that user has been successfully demoted
 	handleOutput blockdouble "Double-checking demotion..."
 
-	if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
+	if dseditgroup -o checkmember -m "$currentUserAccount" admin \
+	| grep -q -w ^yes; then
 		
 		handleOutput blockdouble "User is still an admin - fixing now!"
 
@@ -412,10 +445,12 @@ else
 		# Triple-check that user has been successfully demoted
 		handleOutput blockdouble "Triple-checking demotion..."
 
-		if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
+		if dseditgroup -o checkmember -m "$currentUserAccount" admin \
+		| grep -q -w ^yes; then
             handleOutput exit "User is STILL an admin! \nLogging an error & exiting." 3
 		else
-            handleOutput blockdouble "User was demoted on second attempt."; fi
+            handleOutput blockdouble "User was demoted on second attempt."
+		fi
 	else
 		handleOutput blockdouble "User was demoted on first attempt."
 	fi
