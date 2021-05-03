@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.6
+# MDM-Enroll v1.7
 #
 # Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
 # into the MDM.
@@ -8,23 +8,16 @@
 # ATTENTION: user's Mac MUST be assigned to a prestage in the MDM - otherwise, 
 # no enrollment prompt will be presented.
 #
-# NOTE 1: While this script can run stand-alone, when used for the designed 
-# workflow, it is intended to be obfuscated by wrapping it into an encoded/
-# compiled .app bundle that presents as single user-run app. This is done using
-# a modified fork of bashapp, available at https://github.com/hey-tommy/bashapp
+# NOTE 1: While this script can run stand-alone, it is intended to be obfuscated 
+# by being embedded in a binary within an .app bundle, which presents as single, 
+# user-run app. This is done using a modified fork of bashapp, available at 
+# https://github.com/hey-tommy/bashapp
 #
 # NOTE 2: For local testing, edit and run Set-Env-Toggle.command to set secrets 
 # environment variables
 #
 # WARNING: Be absolutely sure to NOT commit or push this file if you embed your 
 # secrets inside it (which you should only be doing right prior to deployment)
-
-
-# Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
-# (a mostly useless attempt at an additional obfuscation layer)
-
-HISTFILE="/dev/null"
-export HISTFILE="/dev/null"
 
 
 # handleOutput Function
@@ -78,48 +71,81 @@ function handleOutput ()
 #
 # Ensures that secrets are initialized and exits if they aren't properly set
 
+# shellcheck disable=2120
+
 function initializeSecrets ()
 {
-    # Parameter format: no input parameters 
+    # Parameter format: none
+	#                   or optionally, a list of secrets variable names to be used
+	#					(each var name should be a separate parameter) 
     
-    # For local testing, edit and run Set-Env-Toggle.command to set secrets environment variables
-    # When doing final testing or building for release, either run your edited
-    # Set-Sec-Toggle.command to embed your secrets into this script, or manually 
-    # replace variable assignments with your secrets below
-
-    if [[ -z ${adminCredentialsURL+empty} ]]; then
-        adminCredentialsURL="[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"; fi
-    if [[ "$adminCredentialsURL" == "[ENCRYPTED CREDENTIALS STRING URL GOES HERE" ]]; then
-        handleOutput block "adminCredentialsURL not set"; fi
-
-    if [[ -z ${adminCredentialsPassphrase+empty} ]]; then
-        adminCredentialsPassphrase="[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"; fi
-    if [[ "$adminCredentialsPassphrase" == "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" ]]; then
-        handleOutput block "adminCredentialsPassphrase not set"; fi
-
-    if [[ -z ${logWebhookURL+empty} ]]; then
-        logWebhookURL="[LOG WEBHOOK URL GOES HERE]"; fi
-    if [[ "$logWebhookURL" == "[LOG WEBHOOK URL GOES HERE]" ]]; then
-        handleOutput block "logWebhookURL not set"; fi
-
-    if [[ -z ${logUpdateWebhookURL+empty} ]]; then
-        logUpdateWebhookURL="[LOG UPDATE WEBHOOK URL GOES HERE]"; fi
-    if [[ "$logUpdateWebhookURL" == "[LOG UPDATE WEBHOOK URL GOES HERE]" ]]; then
-        handleOutput block "logUpdateWebhookURL not set"; fi
-
-    if [[ -z ${organizationName+empty} ]]; then
-        organizationName="[ORGANIZATION NAME GOES HERE]"; fi
-    if [[ "$organizationName" == "[ORGANIZATION NAME GOES HERE]" ]]; then
-        handleOutput block "organizationName not set"; fi
-
-    if [[ $startBlock -eq 1 ]]; then
-        handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
-        \nExiting..." 1
+    # For local testing, edit and run Set-Env-Toggle to set secrets environment 
+	# variables. When doing final testing or building for release, either run 
+	# your edited Set-Sec-Toggle to embed your secrets into this script, or 
+	# manually replace variable assignments with your secrets below
+    
+    
+	if [[ $# -eq 0 ]]; then
+        declare -a secretsVarNames=( 
+            adminCredentialsURL
+            adminCredentialsPassphrase
+            logWebhookURL
+            logUpdateWebhookURL
+            organizationName
+        )
+    else
+        declare -a secretsVarNames
+        argumentsIndex=0
+        for arguments; do
+            secretsVarNames[((argumentsIndex++))]="$arguments"; done
     fi
+
+    declare -a secretsActualValues=(
+        "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
+        "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
+        "[LOG WEBHOOK URL GOES HERE]"
+        "[LOG UPDATE WEBHOOK URL GOES HERE]"
+        "[ORGANIZATION NAME GOES HERE]"
+    )
+
+    declare -a secretsPlaceholders=(
+        "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
+        "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
+        "[LOG WEBHOOK URL GOES HERE]"
+        "[LOG UPDATE WEBHOOK URL GOES HERE]"
+        "[ORGANIZATION NAME GOES HERE]"
+    )
+
+for index in "${!secretsVarNames[@]}"; do
+    if [[ "${secretsActualValues[index]}" != "${secretsPlaceholders[index]}" ]]; then
+        export -n "${secretsVarNames[index]}"="${secretsActualValues[index]}"
+    elif [[ -z ${!secretsVarNames[index]+empty} || "${!secretsVarNames[index]}" == "${secretsPlaceholders[index]}" ]]; then        
+        handleOutput block "${secretsVarNames[index]}"' not set';
+    fi
+done
+
+#shellcheck disable=2154
+if [[ $startBlock -eq 1 ]]; then
+    handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
+    \nExiting..." 1
+fi
 }
 
 
+# Disable HISTFILE, just in case it was forced enabled in non-interactive sessions.
+# (a mostly useless attempt at an additional obfuscation layer)
+HISTFILE="/dev/null"
+export HISTFILE="/dev/null"
+
 initializeSecrets;
+
+#initializeSecrets \
+#	"adminCredentialsURL" \
+#	"adminCredentialsPassphrase" \
+#	"logWebhookURL" \
+#	"logUpdateWebhookURL" \
+#	"organizationName";
+
 
 # Initialize variables
 logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUserAccount=\"\$currentUserAccount\
@@ -135,6 +161,8 @@ if [[ -z ${scriptDirectory+empty} ]]; then
 		scriptDirectory="$1"
 	else
 		scriptDirectory="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+		# zsh variant
+		# scriptDirectory="$(cd "$(dirname "${(%):-%x}")" &> /dev/null && pwd)"
 	fi
 fi
 
@@ -195,6 +223,7 @@ logWebhookFullQueryURL="$(eval "echo \"$(echo "$logWebhookURL"\?"$logWebhookQuer
 logWebhookResult=$(curl -s "$logWebhookFullQueryURL" | sed -En 's/.*"status": "([^"]+)"}$/\1/p')
 
 # Retrieve and decrypt admin account credentials
+# shellcheck disable=2154
 if [[ "$logWebhookResult" == "success" ]]; then
 	adminCredentials=$(curl -s "$adminCredentialsURL" | openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
@@ -218,6 +247,7 @@ for icon in "Logo" "SysPrefs"; do
 	fi
 done
 
+# shellcheck disable=2154
 read -r -d '' enrollmentWelcomeDialog <<EOF
 display dialog "This tool will enroll you into our MDM platform.\n\nEnrolling into the MDM will help keep your Mac \
 protected and up-to-date." with title "$organizationName MDM Enrollment Tool" buttons {"Continue"} default button \
@@ -225,8 +255,9 @@ protected and up-to-date." with title "$organizationName MDM Enrollment Tool" bu
 EOF
 
 # Display dialog box
-/bin/launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentWelcomeDialog" > /dev/null
+launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentWelcomeDialog" > /dev/null
 
+# shellcheck disable=2154
 read -r -d '' enrollmentContinueDialog <<EOF
 display dialog "Click on the DEVICE ENROLLMENT notification, which will appear in the top right of your screen several \
 seconds after you click Continue below.\n\n\nPlease click Continue to begin." with title "$organizationName Laptop Managment \
@@ -234,10 +265,11 @@ Enrollment" buttons {"Continue"} default button "Continue" with hidden answer wi
 EOF
 
 # Display dialog box
-/bin/launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentContinueDialog" > /dev/null
+launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentContinueDialog" > /dev/null
 
-# Mitigate a macOS Downloads folder access permission prompt, which pops up when this script is compiled via Platypus
-cd /tmp
+# Mitigate a macOS Downloads folder access permission prompt, which popped up when this script was compiled via Platypus
+# # shellcheck disable=2164
+# cd /tmp
 
 # Initiate enrollment
 if [[ "$accountType" == "Admin" ]]; then
@@ -246,6 +278,7 @@ if [[ "$accountType" == "Admin" ]]; then
 	handleOutput message "User is an admin"
 
 	# Trigger enrollment
+	# shellcheck disable=2016
 	echo "$adminAccountPass" | expect -c '
 	log_user 0
 	set adminAccountPass [gets stdin]
@@ -269,6 +302,7 @@ else
 	handleOutput message "User is NOT an admin"
 
 	# Promote, trigger enrollment, then demote
+	# shellcheck disable=2016
 	echo "$adminAccountPass" | expect -c '
 	set adminAccountPass [gets stdin]
 	log_user 0
@@ -295,9 +329,11 @@ else
 	handleOutput blockdouble "Double-checking demotion..."
 
 	if dseditgroup -o checkmember -m "$currentUserAccount" admin|grep -q -w ^yes; then
+		
 		handleOutput blockdouble "User is still an admin - fixing now!"
 
 		# Demote user
+		# shellcheck disable=2016
 		echo "$adminAccountPass" | expect -c '
 		log_user 0
         set adminAccountPass [gets stdin]
@@ -323,6 +359,7 @@ else
 		else
             handleOutput blockdouble "User was demoted on second attempt."; fi
 	else
-		handleOutput blockdouble "User was demoted on first attempt."; fi
+		handleOutput blockdouble "User was demoted on first attempt."
+	fi
 
 fi

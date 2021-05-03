@@ -1,36 +1,30 @@
 #!/bin/bash
 #
-# Set-Sec-Toggle 1.1
+# Set-Sec-Toggle 1.2
 #
 # Adds / removes secrets variables in MDM-Enroll for FINAL testing & deployment
 #
 ### WARNING: To avoid accidentally committing or pushing your secrets, run the 
-###########  following command once you've got this in your local repo!!!
+###########  following once you've got this in your local repo:
 ###########
 ###########  >>>   git update-index --skip-worktree Set-Sec-Toggle.command 
 ###########
 ###########  This will ensure that once you edit this scipt with your secrets, 
-###########  those changes will NOT be tracked, comitted or pushed. Also, be  
-###########  absolutely sure you do NOT commit your MDM-Enroll.command once 
-###########  you've embedded your secrets into it using this script!!!
+###########  those changes will NOT be tracked, comitted or pushed (you can undo
+###########  later via no-skip-worktree). Also, be sure you do NOT commit your 
+###########  MDM-Enroll.command once you've embedded secrets via this script,
 #
 # NOTE 1: If you're just testing in your local environment, you should be using
-# Set-Env-Toggle.command instead, which uses environment variables to pass
-# secrets to MDM-Enroll. You should ONLY use this in the final phase of testing
-# or just prior to deployement, right before compiling MDM-Enroll using bashapp.
+# Set-Env-Toggle instead, which uses environment variables to pass secrets to 
+# MDM-Enroll. You should ONLY use this script in the final phase of testing, 
+# or just prior to deployement before compiling using bashapp.
 #
-# NOTE 2: You must first edit all 2nd occurences of placeholder values 
-# (3rd parameter of toggleSecVar) and replace them with your actual secrets 
-# before running this script.
+# NOTE 2: The secrets variables embedded by this script take precedece over any 
+# environment variables set via Set-Env-Toggle
 #
-# NOTE 3: The environment variables set by Set-Env-Toggle.command always take 
-# priority over any secrets you embed directly into MDM-Enroll.comnmand. To make
-# sure any directly embedded secrets are in effect, run Set-Env-Toggle.command
-# to remove environment variables.
-#
-# NOTE 4: When switching from env vars to embedded vars, be sure to log out
-# and back in to ensure env vars are no longer propagating from the parent 
-# process (especially when double-clicking in Finder).
+# HOW-TO: Before running this script, edit all 2nd occurences of placeholder 
+# values in the function calls at bottom (3rd parameter of toggleSecVar),
+# replacing them with your actual secrets
 
 
 # toggleSecVar Function
@@ -39,27 +33,51 @@
 
 toggleSecVar ()
 {
-    # Parameter format:   toggleSecVar [secretsVariableName]{string} [secretsPlaceholder]{string} [secretsValue]{string}
+    # Parameter format:   toggleSecVar [secretsVariableName]{string} 
+    #                                  [secretsPlaceholder]{string} 
+    #                                  [secretsValue]{string}
 
-    if grep -Fq "$1=\"$2\"" "$scriptDirectory"/MDM-Enroll.command; then
-        echo Embedding "$1" secret into MDM-Enroll...
-        sed -i '' -Ee "s|$1=\"[^\"]+\"|$1=\"$3\"|g" "$scriptDirectory"/MDM-Enroll.command
-    elif grep -Fq "$1=\"$3\"" "$scriptDirectory"/MDM-Enroll.command; then
+    anchor="declare -a secretsActualValues=[^)]+?"
+    escapedPlaceholder="$(echo "$2" | perl -pe 's{\[}{\\\[}')"
+    findPlaceholderCommand="exit 1 if !m{(?:$anchor)$escapedPlaceholder}s"
+    findSecretCommand="exit 1 if !m{(?:$anchor)$3}s"
+
+    if perl -0777 -ne "$findPlaceholderCommand" "$scriptPath"; then
+        replacePlaceholderCommand="s{($anchor)$escapedPlaceholder}{\${1}$3}s"
+        echo Embedding "$1" secret into "$scriptName"...
+        perl -0777 -i -pe "$replacePlaceholderCommand" "$scriptPath"
+    elif perl -0777 -ne "$findSecretCommand" "$scriptPath"; then
+        replaceSecretCommand="s{($anchor)$3}{\${1}$escapedPlaceholder}s"
         echo Removing "$1" secret and replacing with placeholder...
-        sed -i '' -Ee "s|$1=\"[^\"]+\"|$1=\"$2\"|g" "$scriptDirectory"/MDM-Enroll.command
+        perl -0777 -i -pe "$replaceSecretCommand" "$scriptPath"
     fi
 }
 
 
-# Change to script's directory
+# Set target script name
+scriptName="MDM-Enroll"
+scriptFileName="$scriptName"'.command'
+
+# Get script directory & set target script path
 scriptDirectory="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+scriptPath="$scriptDirectory"'/'"$scriptFileName"
 
 echo
 
-toggleSecVar "adminCredentialsURL" "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]" "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
-toggleSecVar "adminCredentialsPassphrase" "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
-toggleSecVar "logWebhookURL" "[LOG WEBHOOK URL GOES HERE]" "[LOG WEBHOOK URL GOES HERE]"
-toggleSecVar "logUpdateWebhookURL" "[LOG UPDATE WEBHOOK URL GOES HERE]" "[LOG UPDATE WEBHOOK URL GOES HERE]"
-toggleSecVar "organizationName" "[ORGANIZATION NAME GOES HERE]" "[ORGANIZATION NAME GOES HERE]"
+toggleSecVar "adminCredentialsURL" \
+    "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]" \
+    "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
+toggleSecVar "adminCredentialsPassphrase" \
+    "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" \
+    "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
+toggleSecVar "logWebhookURL" \
+    "[LOG WEBHOOK URL GOES HERE]" \
+    "[LOG WEBHOOK URL GOES HERE]"
+toggleSecVar "logUpdateWebhookURL" \
+    "[LOG UPDATE WEBHOOK URL GOES HERE]" \
+    "[LOG UPDATE WEBHOOK URL GOES HERE]"
+toggleSecVar "organizationName" \
+    "[ORGANIZATION NAME GOES HERE]" \
+    "[ORGANIZATION NAME GOES HERE]"
 
 echo

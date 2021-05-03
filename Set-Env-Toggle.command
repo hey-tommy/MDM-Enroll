@@ -1,37 +1,35 @@
 #!/bin/bash
 #
-# Set-Env-Toggle 1.3
+# Set-Env-Toggle 1.4
 #
 # Adds / removes environment variables needed for local testing of MDM-Enroll
 #
 ### WARNING: To avoid accidentally committing or pushing your secrets, run the 
-###########  following command once you've got this in your local repo!!!
+###########  following once you've got this in your local repo:
 ###########
 ###########  >>>   git update-index --skip-worktree Set-Env-Toggle.command 
 ###########
 ###########  This will ensure that once you edit this scipt with your secrets, 
-###########  those changes will NOT be tracked, comitted or pushed. Also, be  
-###########  absolutely sure you do NOT commit your MDM-Enroll.command once 
-###########  you've embedded your secrets directly inside it!
+###########  those changes will NOT be tracked, comitted or pushed (you can undo
+###########  later via no-skip-worktree). Also, be sure you do NOT commit your 
+###########  MDM-Enroll.command once you've embedded secrets inside it.
 #
-# NOTE 1: You must first edit the placeholder values (2nd parameter of toggleEnvVar)
-# and replace them with your actual secrets before running this script.
+# HOW-TO: Before running this script, edit the placeholder values in function 
+# calls at bottom (2rd parameter of toggleEnvVar), replacing them with secrets
 #
-# NOTE 2: Once you're ready to compile your MDM-Enroll script using bashapp, use 
-# Set-Sec-Toggle.command to embed your secrets into MDM-Enroll.command, and run 
-# this script (containing your secrets values you originally added), and it will
-# remove the secrets environment variables from your testing user profile.
+# NOTE 1: Once you're ready to compile your MDM-Enroll script using bashapp, run 
+# your edited Set-Sec-Toggle to embed secrets directly into MDM-Enroll.command. 
+# You should then run this script again to remove your secrets env vars.
 #
-# NOTE 3: The environment variables set by this script always take priority over 
-# any secrets you have embedded directly into MDM-Enroll.comnmand.
+# NOTE 2: The secrets variables embedded by Set-Sec-Toggle take precedece over 
+# any environment variables set by this script
 #
-# NOTE 4: Depending on how you're testing (e.g. double-clicking script or 
-# compiled app through Finder), you may need to log out & back in to ensure that 
-# env variables are in effect after they've been set by this script.
+# NOTE 4: Depending on how you're testing (e.g. double-clicking script or the
+# compiled app in Finder), you may need to log out & back in before env 
+# variables are in effect after they've been set by this script.
 #
-# NOTE 5: The compiled script and app bundle should work fine with env variables.
-# Only embed secrets into MDM-Enroll for final testing, and be sure to log out
-# and back in after switching from env vars to embedded vars.
+# NOTE 5: The compiled script and app bundle work fine with env variables.
+# Only embed secrets into MDM-Enroll for final testing or prior to compilation.
 
 
 # toggleEnvVar Function
@@ -44,7 +42,7 @@ toggleEnvVar ()
     
     if ! grep -q "^export $1" ~/"$envVarsFile"; then
         echo Setting environment variable for "$1" secret...
-        echo export "$1"="$2" >> ~/"$envVarsFile"
+        echo export "$1"=\""$2"\" >> ~/"$envVarsFile"
     else
         echo Removing environment variable for "$1" secret...
         sed -i '' "/^export $1.*/d" ~/"$envVarsFile"
@@ -60,10 +58,15 @@ if [[ "$SHELL" == "/bin/bash" ]]; then
 
 echo
 
-toggleEnvVar "adminCredentialsURL" "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
-toggleEnvVar "adminCredentialsPassphrase" "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
-toggleEnvVar "logWebhookURL" "[LOG WEBHOOK URL GOES HERE]"
-toggleEnvVar "logUpdateWebhookURL" "[LOG UPDATE WEBHOOK URL GOES HERE]"
-toggleEnvVar "organizationName" "[ORGANIZATION NAME GOES HERE]"
+toggleEnvVar "adminCredentialsURL" \
+    "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
+toggleEnvVar "adminCredentialsPassphrase" \
+    "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
+toggleEnvVar "logWebhookURL" \
+    "[LOG WEBHOOK URL GOES HERE]"
+toggleEnvVar "logUpdateWebhookURL" \
+    "[LOG UPDATE WEBHOOK URL GOES HERE]"
+toggleEnvVar "organizationName" \
+    "[ORGANIZATION NAME GOES HERE]"
 
 echo
