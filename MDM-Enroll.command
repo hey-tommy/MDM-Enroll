@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.7
+# MDM-Enroll v1.8
 #
 # Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
 # into the MDM.
@@ -20,22 +20,94 @@
 # secrets inside it (which you should only be doing right prior to deployment)
 
 
+# dialogOutput Function
+#
+# Handles displaying AppleScript dialogs
+
+function dialogOutput ()
+{
+	# Parameter format:    dialogOutput [dialogText] 
+	#                        (optional: [iconName]) 
+	#                        (optional: [fallbackIcon]) 
+	#                        (optional: [buttonsList]) 
+	#                        (optional: [defaultButton]) 
+	#                        (optional: [dialogTitle]) 
+	#                        (optional: [returnButtonPressedVarName])
+	#
+	#      Note: function parameters are positional. If skipping an optional 
+	#      parameter, but not skipping the one that follows it, replace the 
+	#      skipped parameter with an empty string (i.e. "")
+	
+	local dialogText="$1"
+	local dialogContent
+	local returnButtonPressed
+
+	# Check dialog icon resources & prepare icon path for dialog
+	# shellcheck disable=2155
+	if [[ -n "$2" ]]; then
+		if [[ ("$2" != "note") && ("$2" != "caution") && ("$2" != "stop") ]]; then
+			if [[ -f "$scriptDirectory"/"${!2}" ]]; then
+				local iconPath="$scriptDirectory"/"${!2}"
+				local dialogIcon="with icon alias POSIX file \"$iconPath\""
+			elif [[ -f "$(dirname "$scriptDirectory")"/Resources/"${!2}" ]]; then
+				local iconPath="$(dirname "$scriptDirectory")"/Resources/"${!2}"
+				local dialogIcon="with icon alias POSIX file \"$iconPath\""
+			elif [[ ("$3" == "note") || ("$3" == "caution") || ("$3" == "stop") ]]; then
+				local dialogIcon="with icon $3"
+			else
+				local dialogIcon="with icon note"
+			fi
+		else
+			local dialogIcon="with icon $2"
+		fi
+	else
+		local dialogIcon=""
+	fi
+
+	if [[ -n "$4" ]]; then
+		local dialogButtonsList='buttons {'"$4"'}'
+		if [[ -n "$5" ]]; then
+			local dialogDefaultButton='default button "'"$5"\"; fi
+	fi
+
+	if [[ -n "$6" ]]; then
+		local dialogTitle="$6"; fi
+
+	read -r -d '' dialogContent <<-EOF
+	display dialog "$dialogText" with title "$dialogTitle" $dialogButtonsList \
+	$dialogDefaultButton $dialogIcon
+	EOF
+
+	# Display dialog box
+	returnButtonPressed=$(launchctl asuser "$currentUserAccountUID" osascript -e \
+	"$dialogContent" | sed -E 's/^button returned:(.*)$/\1/')
+
+	# Return button pressed, if requested
+	if [[ -n "$7" ]]; then
+		export -n "${7}"="$returnButtonPressed"; fi
+}
+
+
 # handleOutput Function
 #
 # Handles user interaction, logging and exiting
 
 function handleOutput ()
 {
-	# Parameter format:    handleOutput [action] (optional:[message_string]) (optional:[exit_code]{int})
+	# Parameter format:    handleOutput [action] 
+	#                        (optional: [messageString]) 
+	#                        (optional: [exitCode]{int})
 	#
-	#      where [action] can be either: message         One-line message
-	#                                    block           Multi-line message block, no blank lines in between
-	#                                    blockdouble     Multi-line message block, with blank lines in between
-	#                                    endblock        Marks end of multi-line message block
-	#                                    exit            Exit app with an optional message and exit code
+	#      where [action] can be one of: 
+	#             message        One-line message
+	#             block          Multi-line message block, no blank lines in between
+	#             blockdouble    Multi-line message block, with blank lines in between
+	#             endblock       Marks end of multi-line message block
+	#             exit           Exit app with an optional message and exit code
 	#
-	#      Reminder: function parameters are positional. If skipping an optional parameter, but not skipping 
-	#      the one that follows it, replace the skipped parameter with an empty string (i.e. "")
+	#      Note: function parameters are positional. If skipping an optional 
+	#      parameter, but not skipping the one that follows it, replace the 
+	#      skipped parameter with an empty string (i.e. "")
 
 	# Output leading newline separator
 	if [[ ($startBlock -ne 1) && ("$1" != "endblock") && ("$1" != "exit") ]] || \
@@ -116,19 +188,19 @@ function initializeSecrets ()
         "[ORGANIZATION NAME GOES HERE]"
     )
 
-for index in "${!secretsVarNames[@]}"; do
-    if [[ "${secretsActualValues[index]}" != "${secretsPlaceholders[index]}" ]]; then
-        export -n "${secretsVarNames[index]}"="${secretsActualValues[index]}"
-    elif [[ -z ${!secretsVarNames[index]+empty} || "${!secretsVarNames[index]}" == "${secretsPlaceholders[index]}" ]]; then        
-        handleOutput block "${secretsVarNames[index]}"' not set';
-    fi
-done
-
-#shellcheck disable=2154
-if [[ $startBlock -eq 1 ]]; then
-    handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
-    \nExiting..." 1
-fi
+	for index in "${!secretsVarNames[@]}"; do
+		if [[ "${secretsActualValues[index]}" != "${secretsPlaceholders[index]}" ]]; then
+			export -n "${secretsVarNames[index]}"="${secretsActualValues[index]}"
+		elif [[ -z ${!secretsVarNames[index]+empty} || "${!secretsVarNames[index]}" == "${secretsPlaceholders[index]}" ]]; then        
+			handleOutput block "${secretsVarNames[index]}"' not set';
+		fi
+	done
+	
+	#shellcheck disable=2154
+	if [[ $startBlock -eq 1 ]]; then
+		handleOutput exit "For local testing, edit & run Set-Env-Toggle.command to set secrets env vars\
+		\nExiting..." 1
+	fi
 }
 
 
@@ -146,14 +218,15 @@ initializeSecrets;
 #	"logUpdateWebhookURL" \
 #	"organizationName";
 
-
 # Initialize variables
 logWebhookQueryString="currentUserFullName=\"\$currentUserFullName\"&currentUserAccount=\"\$currentUserAccount\
 \"&accountType=\"\$accountType\"&computerName=\"\$computerName\"&serialNumber=\"\$serialNumber\
 \"&macOSVersion=\"\$macOSVersion\"&externalIP=\"\$externalIP\"&dateStamp=\"\$dateStamp\""
 logUpdateWebookQueryString="dateStamp=\"\$dateStamp\""
+
 iconLogo="Pic-Logo.icns"
 iconSysPrefs="Pic-SysPrefs.icns"
+dialogTitle="$organizationName MDM Enrollment Tool"
 
 # Determine script/executable's parent directory regardless of how it was invoked
 if [[ -z ${scriptDirectory+empty} ]]; then
@@ -232,44 +305,29 @@ else
 	handleOutput exit "Could not log credentials access, so credentials were not retrieved. \n\nExiting..." 2
 fi
 
-# Check dialog icon resources & prepare icon paths for AppleScript dialogs
-for icon in "Logo" "SysPrefs"; do
-	if [[ -f "$scriptDirectory"/"$(eval echo "\$icon${icon}")" ]]; then
-		declare icon${icon}Path="$scriptDirectory"/"$(eval echo "\$icon${icon}")"
-		declare icon${icon}Dialog="alias POSIX file \"$(eval echo "\$icon${icon}Path")\""
-	elif [[ -f "$(dirname "$scriptDirectory")"/Resources/"$(eval echo "\$icon${icon}")" ]]; then
-		declare icon${icon}Path="$(dirname "$scriptDirectory")"/Resources/"$(eval echo "\$icon${icon}")"
-		declare icon${icon}Dialog="alias POSIX file \"$(eval echo "\$icon${icon}Path")\""
-	elif [[ "$icon" == "Logo" ]]; then
-		declare icon${icon}Dialog="note"
-	else
-		declare icon${icon}Dialog="caution"		
-	fi
+introDialogButtonPressed=""
+initiateEnrollmentButtonPressed=""
+
+while [[ "$initiateEnrollmentButtonPressed" != 'Initiate' ]]; do
+
+	while [[ "$introDialogButtonPressed" != 'Continue' ]]; do
+		dialogOutput "This tool will enroll you into our MDM platform. \
+		\n\nEnrolling into the MDM will help keep your Mac protected and up-to-date." \
+		iconLogo note '"More info","Continue"' Continue "" introDialogButtonPressed
+
+		if [[ "$introDialogButtonPressed" == 'More info' ]]; then
+			# Replace URL with internal MDM enrollment info doc/FAQ
+			open -n 'https://github.com/hey-tommy/MDM-Enroll'; fi
+	done
+
+	introDialogButtonPressed=""
+
+	dialogOutput "Click on the DEVICE ENROLLMENT notification, which will appear \
+	in the top right of your screen several seconds after you click Continue \
+	below.\n\n\nPlease click Initiate to begin." iconSysPrefs caution \
+	'"Back","Initiate"' Initiate "" initiateEnrollmentButtonPressed
+
 done
-
-# shellcheck disable=2154
-read -r -d '' enrollmentWelcomeDialog <<EOF
-display dialog "This tool will enroll you into our MDM platform.\n\nEnrolling into the MDM will help keep your Mac \
-protected and up-to-date." with title "$organizationName MDM Enrollment Tool" buttons {"Continue"} default button \
-"Continue" with hidden answer with icon $iconLogoDialog
-EOF
-
-# Display dialog box
-launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentWelcomeDialog" > /dev/null
-
-# shellcheck disable=2154
-read -r -d '' enrollmentContinueDialog <<EOF
-display dialog "Click on the DEVICE ENROLLMENT notification, which will appear in the top right of your screen several \
-seconds after you click Continue below.\n\n\nPlease click Continue to begin." with title "$organizationName Laptop Managment \
-Enrollment" buttons {"Continue"} default button "Continue" with hidden answer with icon $iconSysPrefsDialog
-EOF
-
-# Display dialog box
-launchctl asuser "$currentUserAccountUID" osascript -e "$enrollmentContinueDialog" > /dev/null
-
-# Mitigate a macOS Downloads folder access permission prompt, which popped up when this script was compiled via Platypus
-# # shellcheck disable=2164
-# cd /tmp
 
 # Initiate enrollment
 if [[ "$accountType" == "Admin" ]]; then
