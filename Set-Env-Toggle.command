@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Set-Env-Toggle 1.4
+# Set-Env-Toggle 1.5
 #
 # Adds / removes environment variables needed for local testing of MDM-Enroll
 #
@@ -66,6 +66,8 @@ toggleEnvVar "logWebhookURL" \
     "[LOG WEBHOOK URL GOES HERE]"
 toggleEnvVar "logUpdateWebhookURL" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]"
+toggleEnvVar "moreInfoURL" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
 toggleEnvVar "organizationName" \
     "[ORGANIZATION NAME GOES HERE]"
 

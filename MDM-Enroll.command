@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# MDM-Enroll v1.9
+# MDM-Enroll v1.10
 #
 # Triggers an Apple Device Enrollment prompt and allows a user to easily enroll 
 # into the MDM.
@@ -163,6 +163,7 @@ function initializeSecrets ()
             adminCredentialsPassphrase
             logWebhookURL
             logUpdateWebhookURL
+			moreInfoURL
             organizationName
         )
     else
@@ -177,6 +178,7 @@ function initializeSecrets ()
         "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
         "[LOG WEBHOOK URL GOES HERE]"
         "[LOG UPDATE WEBHOOK URL GOES HERE]"
+		"[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
         "[ORGANIZATION NAME GOES HERE]"
     )
 
@@ -185,6 +187,7 @@ function initializeSecrets ()
         "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
         "[LOG WEBHOOK URL GOES HERE]"
         "[LOG UPDATE WEBHOOK URL GOES HERE]"
+		"[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
         "[ORGANIZATION NAME GOES HERE]"
     )
 
@@ -230,6 +233,7 @@ initializeSecrets;
 #	"adminCredentialsPassphrase" \
 #	"logWebhookURL" \
 #	"logUpdateWebhookURL" \
+#	"moreInfoURL" \
 #	"organizationName";
 
 # Initialize variables
@@ -239,6 +243,11 @@ iconLogo="Pic-Logo.icns"
 iconSysPrefs="Pic-SysPrefs.icns"
 # shellcheck disable=2154
 dialogTitle="$organizationName MDM Enrollment Tool"
+
+if [[ -n "$moreInfoURL" ]]; then
+	introDialogButtons='"More info","Continue"'
+else
+	introDialogButtons='"Continue"'; fi
 
 # Determine script/executable's parent directory regardless of how it was invoked
 if [[ -z ${scriptDirectory+empty} ]]; then
@@ -317,24 +326,29 @@ dateStamp="$(date +"%F %T" | sed -e 's/ /%20/g' | sed -e 's/:/%3A/g')"
 buildQueryString logWebhookQueryString dateStamp
 buildQueryString logUpdateWebookQueryString dateStamp
 
-# Build full webhook query URL
-# shellcheck disable=2154
-logWebhookFullQueryURL="$logWebhookURL"\?"$logWebhookQueryString"
+if [[ -n "$logWebhookURL" ]]; then
+	# Build full webhook query URL
+	# shellcheck disable=2154
+	logWebhookFullQueryURL="$logWebhookURL"\?"$logWebhookQueryString"
+	#logWebhookFullQueryURL="$(eval "echo \"$(echo "$logWebhookURL"\?"$logWebhookQueryString")\"")"
 
-# Log admin credentials access
-logWebhookResult=$(curl -s "$logWebhookFullQueryURL" \
-| sed -En 's/.*"status": "([^"]+)"}$/\1/p')
+	# Log admin credentials access
+	logWebhookResult=$(curl -s "$logWebhookFullQueryURL" \
+	| sed -En 's/.*"status": "([^"]+)"}$/\1/p')
+else
+	logWebhookResult="skipped"
+fi
 
 # Retrieve and decrypt admin account credentials
 # shellcheck disable=2154
-if [[ "$logWebhookResult" == "success" ]]; then
+if [[ "$logWebhookResult" == "success" || "$logWebhookResult" == "skipped" ]]; then
 	adminCredentials=$(curl -s "$adminCredentialsURL" \
 	| openssl enc -aes256 -d -a -A -salt -k "$adminCredentialsPassphrase")
 	adminAccount=$(echo "$adminCredentials" | head -n 1)
 	adminAccountPass=$(echo "$adminCredentials" | tail -n 1)
 else
-	handleOutput exit "Could not log credentials access, so credentials were `
-	`not retrieved. \n\nExiting..." 2
+	handleOutput exit "Could not log credentials access, so credentials `
+	`were not retrieved. \n\nExiting..." 2
 fi
 
 introDialogButtonPressed=""
@@ -345,11 +359,11 @@ while [[ "$initiateEnrollmentButtonPressed" != 'Initiate' ]]; do
 	while [[ "$introDialogButtonPressed" != 'Continue' ]]; do
 		dialogOutput "This tool will enroll you into our MDM platform. \
 		\n\nEnrolling into the MDM will help keep your Mac protected and up-to-date." \
-		iconLogo note '"More info","Continue"' Continue "" introDialogButtonPressed
+		iconLogo note "$introDialogButtons" Continue "" introDialogButtonPressed
 
 		if [[ "$introDialogButtonPressed" == 'More info' ]]; then
 			# Replace URL with internal MDM enrollment info doc/FAQ
-			open -n 'https://github.com/hey-tommy/MDM-Enroll'; fi
+			open -n "$moreInfoURL"; fi
 	done
 
 	introDialogButtonPressed=""
@@ -456,3 +470,18 @@ else
 	fi
 
 fi
+
+if [[ -n "$logUpdateWebhookURL" ]]; then
+	# Build full update webhook query URL
+	# shellcheck disable=2154
+	logUpdateWebhookFullQueryURL="$logUpdateWebhookURL"\?"$logUpdateWebhookQueryString"
+
+	# Update log with enrollment results 
+	logUpdateWebhookResult=$(curl -s "$logUpdateWebhookFullQueryURL" \
+	| sed -En 's/.*"status": "([^"]+)"}$/\1/p')
+else
+	logUpdateWebhookResult="skipped"
+fi
+
+if [[ "$logUpdateWebhookResult" != "success" && "$logUpdateWebhookResult" != "skipped" ]]; then
+	handleOutput exit "Could not log enrollment results. \n\nExiting..." 4; fi

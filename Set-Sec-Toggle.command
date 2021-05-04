@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Set-Sec-Toggle 1.2
+# Set-Sec-Toggle 1.3
 #
 # Adds / removes secrets variables in MDM-Enroll for FINAL testing & deployment
 #
@@ -22,9 +22,9 @@
 # NOTE 2: The secrets variables embedded by this script take precedece over any 
 # environment variables set via Set-Env-Toggle
 #
-# HOW-TO: Before running this script, edit all 2nd occurences of placeholder 
-# values in the function calls at bottom (3rd parameter of toggleSecVar),
-# replacing them with your actual secrets
+# HOW-TO: Before running this script, edit all 1st occurences of placeholder 
+# values in the function calls below at the bottom of this script (2nd parameter 
+# of toggleSecVar), replacing them with your actual secrets
 
 
 # toggleSecVar Function
@@ -34,20 +34,20 @@
 toggleSecVar ()
 {
     # Parameter format:   toggleSecVar [secretsVariableName]{string} 
-    #                                  [secretsPlaceholder]{string} 
     #                                  [secretsValue]{string}
+    #                                  [secretsPlaceholder]{string} 
 
     anchor="declare -a secretsActualValues=[^)]+?"
-    escapedPlaceholder="$(echo "$2" | perl -pe 's{\[}{\\\[}')"
+    escapedPlaceholder="$(echo "$3" | perl -pe 's{\[}{\\\[}')"
     findPlaceholderCommand="exit 1 if !m{(?:$anchor)$escapedPlaceholder}s"
-    findSecretCommand="exit 1 if !m{(?:$anchor)$3}s"
+    findSecretCommand="exit 1 if !m{(?:$anchor)$2}s"
 
     if perl -0777 -ne "$findPlaceholderCommand" "$scriptPath"; then
-        replacePlaceholderCommand="s{($anchor)$escapedPlaceholder}{\${1}$3}s"
+        replacePlaceholderCommand="s{($anchor)$escapedPlaceholder}{\${1}$2}s"
         echo Embedding "$1" secret into "$scriptName"...
         perl -0777 -i -pe "$replacePlaceholderCommand" "$scriptPath"
     elif perl -0777 -ne "$findSecretCommand" "$scriptPath"; then
-        replaceSecretCommand="s{($anchor)$3}{\${1}$escapedPlaceholder}s"
+        replaceSecretCommand="s{($anchor)\"$2\"}{\${1}\"$escapedPlaceholder\"}s"
         echo Removing "$1" secret and replacing with placeholder...
         perl -0777 -i -pe "$replaceSecretCommand" "$scriptPath"
     fi
@@ -76,6 +76,9 @@ toggleSecVar "logWebhookURL" \
 toggleSecVar "logUpdateWebhookURL" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]"
+toggleSecVar "moreInfoURL" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
 toggleSecVar "organizationName" \
     "[ORGANIZATION NAME GOES HERE]" \
     "[ORGANIZATION NAME GOES HERE]"
