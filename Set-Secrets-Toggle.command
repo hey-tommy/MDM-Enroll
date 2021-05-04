@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Set-Sec-Toggle 1.3
+# Set-Secrets-Toggle 1.3
 #
 # Adds / removes secrets variables in MDM-Enroll for FINAL testing & deployment
 #
 ### WARNING: To avoid accidentally committing or pushing your secrets, run the 
 ###########  following once you've got this in your local repo:
 ###########
-###########  >>>   git update-index --skip-worktree Set-Sec-Toggle.command 
+###########  >>>   git update-index --skip-worktree Set-Secrets-Toggle.command 
 ###########
 ###########  This will ensure that once you edit this scipt with your secrets, 
 ###########  those changes will NOT be tracked, comitted or pushed (you can undo
@@ -15,12 +15,12 @@
 ###########  MDM-Enroll.command once you've embedded secrets via this script,
 #
 # NOTE 1: If you're just testing in your local environment, you should be using
-# Set-Env-Toggle instead, which uses environment variables to pass secrets to 
-# MDM-Enroll. You should ONLY use this script in the final phase of testing, 
+# Set-EnvVars-Toggle instead, which uses environment variables to pass secrets 
+# to MDM-Enroll. You should ONLY use this script in the final phase of testing, 
 # or just prior to deployement before compiling using bashapp.
 #
 # NOTE 2: The secrets variables embedded by this script take precedece over any 
-# environment variables set via Set-Env-Toggle
+# environment variables set via Set-EnvVars-Toggle
 #
 # HOW-TO: Before running this script, edit all 1st occurences of placeholder 
 # values in the function calls below at the bottom of this script (2nd parameter 

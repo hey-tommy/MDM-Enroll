@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-# Set-Env-Toggle 1.5
+# Set-EnvVars-Toggle 1.5
 #
 # Adds / removes environment variables needed for local testing of MDM-Enroll
 #
 ### WARNING: To avoid accidentally committing or pushing your secrets, run the 
 ###########  following once you've got this in your local repo:
 ###########
-###########  >>>   git update-index --skip-worktree Set-Env-Toggle.command 
+###########  >>>   git update-index --skip-worktree Set-EnvVars-Toggle.command 
 ###########
 ###########  This will ensure that once you edit this scipt with your secrets, 
 ###########  those changes will NOT be tracked, comitted or pushed (you can undo
@@ -18,11 +18,11 @@
 # calls at bottom (2rd parameter of toggleEnvVar), replacing them with secrets
 #
 # NOTE 1: Once you're ready to compile your MDM-Enroll script using bashapp, run 
-# your edited Set-Sec-Toggle to embed secrets directly into MDM-Enroll.command. 
-# You should then run this script again to remove your secrets env vars.
+# your edited Set-Secrets-Toggle to embed your secrets into MDM-Enroll.command. 
+# You should then run this script again to remove your secrets env variables.
 #
-# NOTE 2: The secrets variables embedded by Set-Sec-Toggle take precedece over 
-# any environment variables set by this script
+# NOTE 2: The secrets variables embedded by Set-Secrets-Toggle take precedece 
+# over any environment variables set by this script
 #
 # NOTE 4: Depending on how you're testing (e.g. double-clicking script or the
 # compiled app in Finder), you may need to log out & back in before env 
@@ -38,7 +38,8 @@
 
 toggleEnvVar ()
 {
-    # Parameter format:   toggleEnvVar [secretsVariableName]{string} [secretsValue]{string}
+    # Parameter format:   toggleEnvVar [secretsVariableName]{string} 
+    #                                  [secretsValue]{string}
     
     if ! grep -q "^export $1" ~/"$envVarsFile"; then
         echo Setting environment variable for "$1" secret...

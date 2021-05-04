@@ -13,8 +13,8 @@
 # user-run app. This is done using a modified fork of bashapp, available at 
 # https://github.com/hey-tommy/bashapp
 #
-# NOTE 2: For local testing, edit and run Set-Env-Toggle.command to set secrets 
-# environment variables
+# NOTE 2: For local testing, edit and run Set-EnvVars-Toggle.command to set 
+# secrets environment variables
 #
 # WARNING: Be absolutely sure to NOT commit or push this file if you embed your 
 # secrets inside it (which you should only be doing right prior to deployment)
@@ -151,9 +151,9 @@ function initializeSecrets ()
 	#                   or optionally, a list of secrets variable names to be used
 	#					(each var name should be a separate parameter) 
     
-    # For local testing, edit and run Set-Env-Toggle to set secrets environment 
+    # For local testing, edit and run Set-EnvVars-Toggle to set secrets environment 
 	# variables. When doing final testing or building for release, either run 
-	# your edited Set-Sec-Toggle to embed your secrets into this script, or 
+	# your edited Set-Secrets-Toggle to embed your secrets into this script, or 
 	# manually replace variable assignments with your secrets below
     
     
@@ -202,7 +202,7 @@ function initializeSecrets ()
 	
 	#shellcheck disable=2154
 	if [[ $startBlock -eq 1 ]]; then
-		handleOutput exit "For local testing, edit & run Set-Env-Toggle.command `
+		handleOutput exit "For local testing, edit & run Set-EnvVars-Toggle.command `
 		`to set secrets env vars \nExiting..." 1
 	fi
 }
