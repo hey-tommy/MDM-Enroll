@@ -70,17 +70,17 @@ toggleSecVar "adminCredentialsURL" \
 toggleSecVar "adminCredentialsPassphrase" \
     "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]" \
     "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
-toggleSecVar "logWebhookURL" \
+toggleSecVar "organizationName" \
+    "[ORGANIZATION NAME GOES HERE]" \
+    "[ORGANIZATION NAME GOES HERE]"
+toggleSecVar "moreInfoURL" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
+toggleSecVar "logMainWebhookURL" \
     "[LOG WEBHOOK URL GOES HERE]" \
     "[LOG WEBHOOK URL GOES HERE]"
 toggleSecVar "logUpdateWebhookURL" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]"
-toggleSecVar "moreInfoURL" \
-    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]" \
-    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
-toggleSecVar "organizationName" \
-    "[ORGANIZATION NAME GOES HERE]" \
-    "[ORGANIZATION NAME GOES HERE]"
 
 echo

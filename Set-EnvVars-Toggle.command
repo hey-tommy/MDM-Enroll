@@ -63,13 +63,13 @@ toggleEnvVar "adminCredentialsURL" \
     "[ENCRYPTED CREDENTIALS STRING URL GOES HERE]"
 toggleEnvVar "adminCredentialsPassphrase" \
     "[ENCRYPTED CREDENTIALS PASSPHRASE GOES HERE]"
-toggleEnvVar "logWebhookURL" \
+toggleEnvVar "organizationName" \
+    "[ORGANIZATION NAME GOES HERE]"
+toggleEnvVar "moreInfoURL" \
+    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
+toggleEnvVar "logMainWebhookURL" \
     "[LOG WEBHOOK URL GOES HERE]"
 toggleEnvVar "logUpdateWebhookURL" \
     "[LOG UPDATE WEBHOOK URL GOES HERE]"
-toggleEnvVar "moreInfoURL" \
-    "[INTERNAL MDM ENROLLMENT INFO URL GOES HERE]"
-toggleEnvVar "organizationName" \
-    "[ORGANIZATION NAME GOES HERE]"
 
 echo
