@@ -40,8 +40,8 @@
 ##     TODO: Make notInPrestage local
 ##     TODO: Replace hardcoded timing with variables/constants 
 ##     TODO: add 10.12 MDM routines & logic
+##     TODO: implement oldestMacOS as a variable
 #      TODO: create an expect script concatenating function
-#      TODO: implement oldestMacOS as a variable
 #      TODO: write all text errors to stderr (either via >&2 or err)
 #      TODO: declare all constants
 #      TODO: proper & useful commenting
@@ -1303,7 +1303,7 @@ function main ()
     #       https://github.com/hey-tommy/bashapp when packaging for deployment.
 
 
-    # Initialize variables/constants needed early
+    # Initialize variables/constants that are needed early
     initializeEarlyVariables "$1"
     
     # Initialize secrets (needed early for $organizationName)
