@@ -174,7 +174,7 @@ function initializeVariables ()
     # shellcheck disable=2154
     dialogAppTitle="$organizationName MDM Enrollment Tool"
     mdmIsJamfPro=1   #Set this to 1 if your MDM is Jamf Pro
-    iconOrganizationLogo="Pic-OrgLogo.png"
+    iconOrganizationLogo="Pic-OrgLogo.icns"
     if [[ $mdmIsJamfPro -eq 1 ]]; then
         iconSelfService="Pic-SelfService.icns"
         selfServiceAppName="$organizationName Self Service"
