@@ -62,7 +62,7 @@
 
 # initializeEarlyVariables Function
 #
-# Initialize variables/constants needed prior to initializing secrets
+# Initializes variables/constants needed prior to initializing secrets
 
 function initializeEarlyVariables ()
 {
@@ -165,7 +165,7 @@ function initializeSecrets ()
 
 # initializeVariables Function
 #
-# Initialize the rest of variables/constants, and global named pipes
+# Initializes the rest of variables/constants, and global named pipes
 
 function initializeVariables ()
 {
