@@ -36,10 +36,8 @@
 # ^  ^<< Completed (also moved to bottom of list)
 # ^<<<<< Priority  (# to ####)
 
-###    TODO: Add verbiage re: no restart required
-##     TODO: Make notInPrestage local
 ##     TODO: Replace hardcoded timing with variables/constants 
-##     TODO: add 10.12 MDM routines & logic
+##     TODO: add macOS 10.12 Sierra MDM routines & logic
 ##     TODO: implement oldestMacOS as a variable
 #      TODO: create an expect script concatenating function
 #      TODO: write all text errors to stderr (either via >&2 or err)
@@ -48,16 +46,16 @@
 #      TODO: move dialog text definitions to a separate function that gets 
            # called from dialogOutput
 
+###  √ TODO: Add verbiage re: no restart required
+#    √ TODO: convert all tabs to spaces except for heredoc areas
 #### √ TODO: check for existence of retrieved admin account +log/throw error/dialog
 #### √ TODO: check for validity of retrieved admin password +log/throw error/dialog
 #### √ TODO: check if machine is assigned to a prestage
 #### √ TODO: Verify enrollment success and add results to log
-###  √ TODO: exit if OS version is below macOS 10.12 Sierra (or 10.13 if not 
-           # implementing 10.12 MDM routines)
+###  √ TODO: exit if OS version is below macOS 10.13 High Sierra
 ##   √ TODO: Add dialog output if secrets not embedded
 ##   √ TODO: Add to log output if user could not be demoted
 #    √ TODO: internet connectivity test (needs text + dialog, exit code 2)
-#    √ TODO: convert all tabs to spaces except for heredoc areas
 
 
 # initializeEarlyVariables Function
@@ -746,7 +744,8 @@ function displayIntroUI ()
         while [[ "$introDialogButtonClicked" != 'Continue' ]]; do
             if [[ "$mdmInfoDialogButtonClicked" != 'MDM FAQ' ]]; then
                 dialogOutput \
-                    "This tool will enroll you into our MDM platform.\n\n`
+                    "This tool will enroll you into our MDM platform\n`
+                    `(no restart required).\n\n`
                     `Enrolling into MDM will help keep your Mac protected and `
                     `up-to-date.\n\n" \
                     "$iconOrganizationLogo" \
