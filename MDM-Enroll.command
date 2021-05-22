@@ -18,10 +18,11 @@
 # possible, and this tool will notify the user accordingly (see 
 # displayEnrollmentResultsUI for dialog text).
 #
-# NOTE 1: While this script can run stand-alone, it is intended to be obfuscated 
-# by being embedded in a binary within an .app bundle, which presents as single, 
-# user-run app. This is done using a modified fork of bashapp, available at 
-# https://github.com/hey-tommy/bashapp
+# NOTE 1: While this script can run stand-alone during testing, it is intended 
+# to be launched by end users as a standard macOS app. This can be built using a 
+# modified fork of bashapp, which also obfuscates the script by encrypting it 
+# via XOR cipher & embedding it, along with the key, inside an executable binary 
+# within the .app bundle (fork available at https://github.com/hey-tommy/bashapp)
 #
 # NOTE 2: For local testing, edit and run Set-EnvVars-Toggle.command to set 
 # secrets environment variables
@@ -43,8 +44,6 @@
 #      TODO: Add note re: ShellCheck
 #      TODO: write all text errors to stderr (either via >&2 or err)
 #      TODO: create an expect script concatenating function
-#      TODO: move dialog text definitions to a separate function that gets 
-           # called from dialogOutput
 
 ##   √ TODO: implement oldestSupportedMacOSVersion as a variable
 ##   √ TODO: Replace hardcoded timing with variables 
