@@ -37,16 +37,16 @@
 # ^<<<<< Priority  (# to ####)
 
 ##     TODO: add macOS 10.12 Sierra MDM routines & logic
-##     TODO: implement oldestMacOS as a variable
-#      TODO: create an expect script concatenating function
-#      TODO: write all text errors to stderr (either via >&2 or err)
-#      TODO: declare all constants as readonly
 ##     TODO: proper & useful commenting
+#      TODO: declare all constants as readonly
+#      TODO: Replace one-line if statements (; fi) with fi on new line
+#      TODO: Add note re: ShellCheck
+#      TODO: write all text errors to stderr (either via >&2 or err)
+#      TODO: create an expect script concatenating function
 #      TODO: move dialog text definitions to a separate function that gets 
            # called from dialogOutput
-#      TODO: Add note re: ShellCheck
-#      TODO: Replace one-line if statements (; fi) with fi on new line
 
+##   √ TODO: implement oldestSupportedMacOSVersion as a variable
 ##   √ TODO: Replace hardcoded timing with variables 
 ###  √ TODO: Add verbiage re: no restart required
 #    √ TODO: convert all tabs to spaces except for heredoc areas
@@ -90,7 +90,7 @@ function initializeEarlyVariables ()
     # Determine macOS version (needed early for setting icon resources)
     macOSVersion="$(sw_vers -productVersion)"
     # TESTING
-    #macOSVersion=10.2.4
+    #macOSVersion=10.11.4
 }
 
 
@@ -171,12 +171,12 @@ function initializeVariables ()
 {
     # Parameter format: none
 
-    # Initialize flags and naming variables
-    mdmIsJamfPro=1   #Set this to 1 if your MDM is Jamf Pro
     # shellcheck disable=2154
     dialogAppTitle="$organizationName MDM Enrollment Tool"
+    mdmIsJamfPro=1   #Set this to 1 if your MDM is Jamf Pro
     if [[ $mdmIsJamfPro -eq 1 ]]; then
         selfServiceAppName="$organizationName Self Service"; fi
+    oldestSupportedMacOSVersion="10.13"
     
     # Initialize icon variables
     iconOrganizationLogo="Pic-OrgLogo.icns"
@@ -602,7 +602,8 @@ function checkMacOSVersion ()
 {
     # Parameter format: none
     
-    if [[ $(versionCompare "$macOSVersion") -lt $(versionCompare 10.13) ]]; then
+    if [[ $(versionCompare "$macOSVersion") \
+      -lt $(versionCompare "$oldestSupportedMacOSVersion") ]]; then
         if [[ -n "$logMainWebhookURL" ]]; then
             successfullyEnrolled="No"
             buildQueryString logMainWebhook successfullyEnrolled
