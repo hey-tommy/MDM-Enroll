@@ -36,16 +36,18 @@
 # ^  ^<< Completed (also moved to bottom of list)
 # ^<<<<< Priority  (# to ####)
 
-##     TODO: Replace hardcoded timing with variables/constants 
 ##     TODO: add macOS 10.12 Sierra MDM routines & logic
 ##     TODO: implement oldestMacOS as a variable
 #      TODO: create an expect script concatenating function
 #      TODO: write all text errors to stderr (either via >&2 or err)
-#      TODO: declare all constants
-#      TODO: proper & useful commenting
+#      TODO: declare all constants as readonly
+##     TODO: proper & useful commenting
 #      TODO: move dialog text definitions to a separate function that gets 
            # called from dialogOutput
+#      TODO: Add note re: ShellCheck
+#      TODO: Replace one-line if statements (; fi) with fi on new line
 
+##   √ TODO: Replace hardcoded timing with variables 
 ###  √ TODO: Add verbiage re: no restart required
 #    √ TODO: convert all tabs to spaces except for heredoc areas
 #### √ TODO: check for existence of retrieved admin account +log/throw error/dialog
@@ -169,14 +171,17 @@ function initializeVariables ()
 {
     # Parameter format: none
 
+    # Initialize flags and naming variables
+    mdmIsJamfPro=1   #Set this to 1 if your MDM is Jamf Pro
     # shellcheck disable=2154
     dialogAppTitle="$organizationName MDM Enrollment Tool"
-    mdmIsJamfPro=1   #Set this to 1 if your MDM is Jamf Pro
+    if [[ $mdmIsJamfPro -eq 1 ]]; then
+        selfServiceAppName="$organizationName Self Service"; fi
+    
+    # Initialize icon variables
     iconOrganizationLogo="Pic-OrgLogo.icns"
     if [[ $mdmIsJamfPro -eq 1 ]]; then
-        iconSelfService="Pic-SelfService.icns"
-        selfServiceAppName="$organizationName Self Service"
-    fi
+        iconSelfService="Pic-SelfService.icns"; fi
     iconClock="/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources`
               `/Clock.icns"
     if [[ ${macOSVersion%%.*} -ge 11 ]]; then
@@ -190,6 +195,15 @@ function initializeVariables ()
         iconCheckMark="$iconDEP"
     fi
 
+    # Initialize timing variables (in seconds)
+    timeEnrollmentNotification=5
+    timeDetectEnrollment=60
+    timeEnrollmentInstructions=$((timeDetectEnrollment+1))
+    # It takes 6-7 seconds after clicking 'Allow' in system DEP dialog to detect 
+    # that the Mac's MDM enrollment status has changed to 'Enrolled'
+    timeDetectEnrollmentDelay=7
+    timeDemotionDelay=$((timeDetectEnrollment-timeDetectEnrollmentDelay))
+    timeEnrollmentSuccessful=3
 
     # Initialize global named pipes
     mkfifo /tmp/notInPrestage
@@ -744,10 +758,10 @@ function displayIntroUI ()
         while [[ "$introDialogButtonClicked" != 'Continue' ]]; do
             if [[ "$mdmInfoDialogButtonClicked" != 'MDM FAQ' ]]; then
                 dialogOutput \
-                    "This tool will enroll you into our MDM platform\n`
-                    `(no restart required).\n\n`
+                    "This tool will enroll you into our MDM platform.\n\n`
                     `Enrolling into MDM will help keep your Mac protected and `
-                    `up-to-date.\n\n" \
+                    `up-to-date.\n\n`
+                    `(No restart required)\n" \
                     "$iconOrganizationLogo" \
                     "note" \
                     "$introDialogButtons" \
@@ -893,7 +907,7 @@ function triggerEnrollmentNotification ()
             send "exit\r"
             exit 1
         }
-        sleep 45
+        sleep '"$timeDemotionDelay"'
         expect " % "
         send "sudo dseditgroup -o edit -d '"$currentUserAccount"' -t user admin\r"
         expect " % "
@@ -962,13 +976,15 @@ function displayEnrollmentUI ()
 {
     # Parameter format: none
 
-    dialogOutput "\n\nWaiting 5 seconds for enrollment notification...\n\n" \
+    dialogOutput \
+        "\n\nWaiting $timeEnrollmentNotification seconds for enrollment `
+        `notification...\n\n" \
         "$iconClock" \
         "" \
         '"Waiting..."' \
         "" \
         "" \
-        5
+        "$timeEnrollmentNotification"
 
     # Launch main enrollment instructions dialog in background process so it can 
     # be killed via its PID as soon as successful enrollment is detected
@@ -983,7 +999,7 @@ function displayEnrollmentUI ()
         '"Clicked \"Allow\", but nothing happened?","No notification?"' \
         "" \
         "" \
-        53 \
+        "$timeEnrollmentInstructions" \
         "enrollProblemButtonClicked" \
         "true" \
         & enrollmentInstructionsPID=$!
@@ -1001,13 +1017,11 @@ function detectEnrollment ()
 {
     # Parameter format: none
 
-    # It takes ~6 seconds between clicking Allow and the enrollment status changing
-    
     local loop
     local isEnrolled
     local notInPrestage
 
-    for ((loop = 0; loop < 52; loop++)); do
+    for ((loop = 0; loop < timeDetectEnrollment; loop++)); do
         isEnrolled="$(profiles status -type enrollment | grep -ci "enrollment: Yes")"
         if [[ $isEnrolled -eq 1 ]]; then
         # TESTING
@@ -1089,7 +1103,7 @@ function displayEnrollmentResultsUI ()
             '"Waiting..."' \
             "" \
             "" \
-            3
+            "$timeEnrollmentSuccessful"
 
         sleep 0.5  # Fading dialog transition, as the previous 'read' forces 1-sec pause
 
