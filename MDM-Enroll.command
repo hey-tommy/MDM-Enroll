@@ -990,8 +990,8 @@ function displayEnrollmentUI ()
     dialogOutput \
         "Click on the DEVICE ENROLLMENT notification in the top-right corner of `
         `your screen.\n\n`
-        `Then, click \\\"Allow\\\", and if asked, enter your Mac password.\n\n`
-        `( Auto-detecting enrollment... )\n" \
+        `Then, click \\\"Allow\\\", and if asked, enter your Mac password.\n\n\n`
+        `( Auto-detecting enrollment for up to $timeDetectEnrollment seconds... )\n" \
         "$iconDEP" \
         "note" \
         '"Clicked \"Allow\", but nothing happened?","No notification?"' \
