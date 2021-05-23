@@ -848,16 +848,15 @@ function triggerEnrollmentNotification ()
         send "$adminAccountPass\r"
         expect " % "
         #
-        send "sudo profiles show -type enrollment | head -n 2\r"
+        send "sudo profiles show -type enrollment | sed \"2q;d\"\r"
         expect " % "
-        if {[string match "*Client is not DEP enabled*" $expect_out(buffer)]} {
+        if {![string match "*\{*" $expect_out(buffer)]} {
             send "sudo profiles renew -type enrollment\r"
             expect " % "
-            send "sudo profiles show -type enrollment | head -n 2\r"
+            send "sudo profiles show -type enrollment | sed \"2q;d\"\r"
             expect " % "
         }
-        if {[string match "*(null)*" $expect_out(buffer)] \
-        || [string match "*Client is not DEP enabled*" $expect_out(buffer)]} {
+        if {![string match "*\{*" $expect_out(buffer)]} {
             sleep 1
             send "exit\r"
             exit 1
@@ -891,16 +890,15 @@ function triggerEnrollmentNotification ()
         #
         send "sudo dseditgroup -o edit -a '"$currentUserAccount"' -t user admin\r"
         expect " % "
-        send "sudo profiles show -type enrollment | head -n 2\r"
+        send "sudo profiles show -type enrollment | sed \"2q;d\"\r"
         expect " % "
-        if {[string match "*Client is not DEP enabled*" $expect_out(buffer)]} {
+        if {![string match "*\{*" $expect_out(buffer)]} {
             send "sudo profiles renew -type enrollment\r"
             expect " % "
-            send "sudo profiles show -type enrollment | head -n 2\r"
+            send "sudo profiles show -type enrollment | sed \"2q;d\"\r"
             expect " % "
         }
-        if {[string match "*(null)*" $expect_out(buffer)] \
-        || [string match "*Client is not DEP enabled*" $expect_out(buffer)]} {
+        if {![string match "*\{*" $expect_out(buffer)]} {
             send "sudo dseditgroup -o edit -d '"$currentUserAccount"' -t user admin\r"
             expect " % "
             sleep 1
